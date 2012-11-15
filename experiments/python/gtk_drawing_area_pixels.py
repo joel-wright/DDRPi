@@ -1,11 +1,11 @@
 __author__ = 'Joel Wright'
 
-import pygtk
-pygtk.require('2.0')
 import gtk
 import math
 import cairo
 import struct
+import pygtk
+pygtk.require('2.0')
 
 class DrawingAreaExample(gtk.Window):
     def __init__(self):
@@ -79,7 +79,6 @@ class DrawingAreaExample(gtk.Window):
                 s += '(%d,%d,%d) ' % (r[0], g[0], b[0])
 
         print s
-
 
 DrawingAreaExample()
 gtk.main()
