@@ -62,13 +62,23 @@ class DrawingAreaExample(gtk.Window):
         self.print_buffer(d)
 
     def print_buffer(self, data):
+        s = ""
         coord = 0
+        row = 1
+        stride = self.surface.get_stride()
+
         while coord < len(data):
             b = struct.unpack('B',data[coord])
             g = struct.unpack('B',data[coord+1])
             r = struct.unpack('B',data[coord+2])
             coord += 4
-            print '(%d,%d,%d)' % (r[0], g[0], b[0])
+            if (coord / row) > stride:
+                row += 1
+                s += '(%d,%d,%d)\n' % (r[0], g[0], b[0])
+            else:
+                s += '(%d,%d,%d) ' % (r[0], g[0], b[0])
+
+        print s
 
 
 DrawingAreaExample()
