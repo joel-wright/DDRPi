@@ -1,4 +1,5 @@
 # Main option config
+# I'm specifying the height and width atm, but maybe we should do this dynamically in-app...
 system:
   width: 320
   height: 240
