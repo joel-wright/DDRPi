@@ -4,6 +4,26 @@ import gtk
 import cairo
 import yaml
 
+class Plugin(object):
+    def configure(self):
+        """
+        Called to configure the plugin before we start it
+        """
+        raise NotImplementedError
+
+    def start(self):
+        """
+        Start the plugin
+        """
+        raise NotImplementedError
+
+    def stop(self):
+        """
+        Stop the plugin if necessary - e.g. stop writing to the dance surface
+        """
+        raise NotImplementedError
+
+
 class DanceSurface(gtk.DrawingArea):
     """
     The class representing the drawable dance floor
@@ -15,6 +35,7 @@ class DanceSurface(gtk.DrawingArea):
         self.height = config["system"]["height"]
         self.width = config["system"]["width"]
         self.surface = cairo.ImageSurface(cairo.FORMAT_RGB24, self.height, self.width)
+
 
 class DDRPi(gtk.Window):
     """
@@ -35,7 +56,11 @@ class DDRPi(gtk.Window):
         f.close()
         return data
 
-
+    def __load_plugins(self):
+        """
+        Load the plugins from the config plugin directory
+        """
+        plugin_folder = self.config["system"]["plugin_dir"]
 
 
 DDRPi()
