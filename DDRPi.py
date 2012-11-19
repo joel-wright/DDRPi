@@ -8,10 +8,13 @@ class DanceSurface(gtk.DrawingArea):
     """
     The class representing the drawable dance floor
     """
-    def __init__(self):
+    def __init__(self, config):
         super(DanceSurface, self).__init__()
 
-        self.surface = cairo.ImageSurface(cairo.FORMAT_RGB24, 300, 300)
+        self.config = config
+        self.height = config["system"]["height"]
+        self.width = config["system"]["width"]
+        self.surface = cairo.ImageSurface(cairo.FORMAT_RGB24, self.height, self.width)
 
 class DDRPi(gtk.Window):
     """
@@ -23,14 +26,17 @@ class DDRPi(gtk.Window):
         """
         super(DDRPi, self).__init__()
 
-        self.dance_surface = DanceSurface()
         self.config = self.__load_config()
+        self.dance_surface = DanceSurface(self.config)
 
-    def __load_config():
+    def __load_config(self):
         f = open('config.yaml')
         data = yaml.load(f)
         f.close()
         return data
+
+
+
 
 DDRPi()
 gtk.main()

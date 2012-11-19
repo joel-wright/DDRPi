@@ -9,4 +9,8 @@ class DisplayLayout(gtk.Window):
         self.ddrpi_config = config
         self.ddrpi_surface = image_surface
 
+    def on_timer(self):
+        # add this
+        return False
+
 
