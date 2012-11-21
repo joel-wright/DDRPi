@@ -3,6 +3,8 @@ __author__ = 'Joel Wright'
 import gtk
 import cairo
 import yaml
+import pygtk
+pygtk.require('2.0')
 
 class Plugin(object):
     def configure(self):
@@ -36,6 +38,9 @@ class DanceSurface(gtk.DrawingArea):
         self.width = config["system"]["width"]
         self.surface = cairo.ImageSurface(cairo.FORMAT_RGB24, self.height, self.width)
 
+    def get_image_surface(self):
+        return self.surface
+
 
 class DDRPi(gtk.Window):
     """
@@ -49,6 +54,7 @@ class DDRPi(gtk.Window):
 
         self.config = self.__load_config()
         self.dance_surface = DanceSurface(self.config)
+        self.plugins = []
 
     def __load_config(self):
         f = open('config.yaml')
