@@ -41,7 +41,7 @@ class DanceSurface(gtk.DrawingArea):
     def get_image_surface(self):
         return self.surface
 
-    def expose(self):
+    def expose(self, widget, event):
         """
         Deal with an expose event and draw the image surface
 
