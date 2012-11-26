@@ -1,4 +1,4 @@
-__author__ = 'Joel Wright'
+__authors__ = ['Joel Wright']
 
 import gtk
 from DDRPi import Plugin
