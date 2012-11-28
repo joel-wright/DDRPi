@@ -5,37 +5,40 @@ import cairo
 import yaml
 import pygtk
 pygtk.require('2.0')
+from Layout import DisplayLayout
 
 class Plugin(object):
     def configure(self):
         """
-        Called to configure the plugin before we start it
+        Called to configure the plugin before we start it.
         """
         raise NotImplementedError
 
     def start(self):
         """
-        Start the plugin
+        Start the plugin.
         """
         raise NotImplementedError
 
     def stop(self):
         """
-        Stop the plugin if necessary - e.g. stop writing to the dance surface
+        Stop the plugin if necessary - e.g. stop writing to the dance surface.
         """
         raise NotImplementedError
 
 
 class DanceSurface(gtk.DrawingArea):
     """
-    The class representing the drawable dance floor
+    The class representing the drawable dance floor. This is a wrapper around
+    a Cairo ImageSurface, so that we can pass the ImageSurface to the display
+    plugins, and react to any changes made by updating the display and sending
+    the appropriate updates to the dance floor through the serial port.
     """
-    def __init__(self, config):
+    def __init__(self, width, height):
         super(DanceSurface, self).__init__()
 
-        self.config = config
-        self.height = config["system"]["height"]
-        self.width = config["system"]["width"]
+        self.width = width
+        self.height = height
         self.surface = cairo.ImageSurface(cairo.FORMAT_RGB24, self.height, self.width)
 
     def get_image_surface(self):
@@ -47,6 +50,7 @@ class DanceSurface(gtk.DrawingArea):
 
         Do we draw to the RPi USB here?
         """
+        # TODO: Draw to the widget and output to the serial port
 
 
 class DDRPi(gtk.Window):
@@ -55,15 +59,37 @@ class DDRPi(gtk.Window):
     """
     def __init__(self):
         """
-        Initialise the dance floor
+        Initialise the DDRPi Controller app.
         """
         super(DDRPi, self).__init__()
 
+        # GTk setup stuff
+        self.set_title("DDRPi Controller")
+        self.set_size_request(800,600)
+        self.set_position(gtk.WIN_POS_CENTER)
+        self.connect("destroy", gtk.main_quit)
+        
+        # TODO: Load the Glade layout
+
+        # Load the application config
         self.config = self.__load_config()
-        self.dance_surface = DanceSurface(self.config)
+        
+        # Create the layout widget and calculate floor size
+        self.layout = DisplayLayout(self.config["modules"])
+        (x,y) = self.layout.calculate_floor_size()
+        self.layout.connect("layout-changed", self.changed_layout)
+        
+        # Create the dance floor widget
+        self.dance_surface = DanceSurface(x, y)
         self.plugins = []
 
     def __load_config(self):
+        """
+        Load the config file into a dictionary.
+        
+        Returns:
+            The dictionary resulting from loading the YAML config file.
+        """
         f = open('config.yaml')
         data = yaml.load(f)
         f.close()
@@ -74,6 +100,22 @@ class DDRPi(gtk.Window):
         Load the plugins from the config plugin directory
         """
         plugin_folder = self.config["system"]["plugin_dir"]
+        
+        # TODO: Load the plugins
+        
+    def changed_layout(self, widget):
+        """
+        Called on layout change to dedefine the DanceFloor size/shape
+        """
+        # Get the new size and shape
+        (x,y) = self.layout.calculate_floor_size()
+        
+        # Create a new dance surface
+        self.dance_surface = DanceSurface(x, y)
+        
+        # TODO: Reconfigure the running plugin (or reload the running plugin)
+        #       Need to create a layout changed event - see URL below for details:
+        #       http://zetcode.com/gui/pygtk/signals/
 
 
 # Start the dance floor application

@@ -1,8 +1,5 @@
 # Main option config
-# I'm specifying the height and width atm, but maybe we should do this dynamically in-app...
 system:
-  width: 320
-  height: 240
   plugin_dir: /home/jjw/ddrpi/plugins
 
 # Module layout config (we may change this later)
