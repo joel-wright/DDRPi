@@ -63,7 +63,7 @@ class DDRPi(gtk.Window):
         """
         super(DDRPi, self).__init__()
 
-        # GTk setup stuff
+        # GTK setup stuff
         self.set_title("DDRPi Controller")
         self.set_size_request(800,600)
         self.set_position(gtk.WIN_POS_CENTER)
