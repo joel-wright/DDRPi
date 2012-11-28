@@ -3,10 +3,7 @@ __authors__ = ['Joel Wright']
 import gtk
 from DDRPi import Plugin
 
-class DisplayLayout(gtk.Window, Plugin):
-    def __init__(self):
-        super(DisplayLayout, self).__init__()
-
+class SimplePlugin(Plugin):
     def config(self, config, image_surface):
         """
         This is an example of an end user module - need to make sure we can get the main image surface and config
@@ -28,5 +25,3 @@ class DisplayLayout(gtk.Window, Plugin):
     def on_timer(self):
         # add this
         return False
-
-

@@ -76,5 +76,7 @@ class DDRPi(gtk.Window):
         plugin_folder = self.config["system"]["plugin_dir"]
 
 
-DDRPi()
-gtk.main()
+# Start the dance floor application
+if __name__ == "__main__":
+	dance_floor = DDRPi()
+	gtk.main()
