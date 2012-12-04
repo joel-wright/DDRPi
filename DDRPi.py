@@ -6,27 +6,8 @@ import yaml
 import pygtk
 import logging
 pygtk.require('2.0')
-from Layout import DisplayLayout
-
-class DDRPiPlugin(object):
-    def configure(self):
-        """
-        Called to configure the plugin before we start it.
-        """
-        raise NotImplementedError
-
-    def start(self):
-        """
-        Start the plugin.
-        """
-        raise NotImplementedError
-
-    def stop(self):
-        """
-        Stop the plugin if necessary - e.g. stop writing to the dance surface.
-        """
-        raise NotImplementedError
-
+from layout import DisplayLayout
+from plugins_base import DDRPiPlugin, PluginRegistry
 
 class DanceSurface(gtk.DrawingArea):
     """
@@ -75,6 +56,10 @@ class DDRPi(gtk.Window):
         # Load the application config
         self.config = self.__load_config()
         
+        # Set up plugin registry
+        self.__registry__ = PluginRegistry()
+        self.__register_plugins(self.config["system"]["plugin_dir"])
+        
         # Create the layout widget and calculate floor size
         self.layout = DisplayLayout(self.config["modules"])
         (x,y) = self.layout.calculate_floor_size()
@@ -95,39 +80,28 @@ class DDRPi(gtk.Window):
         data = yaml.load(f)
         f.close()
         return data
-
-    def __load_plugins(self):
-        """
-        Load the plugins from the config plugin directory
-        """
-        logging.info("Loading plugins from plugin directory")
-        plugin_folder = self.config["system"]["plugin_dir"]
-        plugins_found = __find_plugins(plugin_folder)
         
-        # TODO: Load the plugins
-        
-    def __find_plugins(self, plugin_folder):
+    def __register_plugins(self, plugin_folder):
         """
         Find the loadable plugins in the given plugin folder.
         
         Returns:
             A list of plugins that can be loaded.
         """
-        logging.info("Searching for plugins in %s" % plugin_folder)
+        print("Searching for plugins in %s" % plugin_folder)
         plugins = []
         
         for root, dirs, files in os.walk(plugin_folder):
             for fname in files:
-                if name.endswith(".py") and not name.startswith("__"):
+                if fname.endswith(".py") and not fname.startswith("__"):
                     fpath = os.path.join(root, fname)
-                    mname = path.rsplit('.', 1)[0].replace('/', '.')
-                    module = __import__(mname)
-                    
-                    mdict = module.__dict__
-                    for m in mname
-                    
-                    # TODO: Complete module listing 
-                    
+                    mname = fpath.rsplit('.', 1)[0].replace('/', '.')
+                    importlib.import_module(mname)
+            
+            for plugin in DDRPiPlugin.__subclasses__():
+                print("name: %s" % plugin.__name__)
+                pinst = plugin()
+                self.__registry__.register(pinst.__name__, pinst)
         
     def changed_layout(self, widget):
         """

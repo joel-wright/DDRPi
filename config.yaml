@@ -1,6 +1,6 @@
 # Main option config
 system:
-  plugin_dir: /home/jjw/ddrpi/plugins
+  plugin_dir: plugins
 
 # Module layout config (we may change this later)
 modules:
