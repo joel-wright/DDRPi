@@ -1,9 +1,9 @@
 __authors__ = ['Joel Wright']
 
 import gtk
-from DDRPi import Plugin
+from DDRPi import DDRPiPlugin
 
-class SimplePlugin(Plugin):
+class SimplePlugin(DDRPiPlugin):
     def config(self, config, image_surface):
         """
         This is an example of an end user module - need to make sure we can get

@@ -4,10 +4,11 @@ import gtk
 import cairo
 import yaml
 import pygtk
+import logging
 pygtk.require('2.0')
 from Layout import DisplayLayout
 
-class Plugin(object):
+class DDRPiPlugin(object):
     def configure(self):
         """
         Called to configure the plugin before we start it.
@@ -99,9 +100,34 @@ class DDRPi(gtk.Window):
         """
         Load the plugins from the config plugin directory
         """
+        logging.info("Loading plugins from plugin directory")
         plugin_folder = self.config["system"]["plugin_dir"]
+        plugins_found = __find_plugins(plugin_folder)
         
         # TODO: Load the plugins
+        
+    def __find_plugins(self, plugin_folder):
+        """
+        Find the loadable plugins in the given plugin folder.
+        
+        Returns:
+            A list of plugins that can be loaded.
+        """
+        logging.info("Searching for plugins in %s" % plugin_folder)
+        plugins = []
+        
+        for root, dirs, files in os.walk(plugin_folder):
+            for fname in files:
+                if name.endswith(".py") and not name.startswith("__"):
+                    fpath = os.path.join(root, fname)
+                    mname = path.rsplit('.', 1)[0].replace('/', '.')
+                    module = __import__(mname)
+                    
+                    mdict = module.__dict__
+                    for m in mname
+                    
+                    # TODO: Complete module listing 
+                    
         
     def changed_layout(self, widget):
         """
