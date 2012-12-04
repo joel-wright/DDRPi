@@ -46,6 +46,7 @@ class TestMainPlugins(object):
                     mname = fpath.rsplit('.', 1)[0].replace('/', '.')
                     sys.path.insert(0, plugin_folder)
                     module = importlib.import_module(mname)
+		    from plugins_test import TestPlugin
                     for plugin in TestPlugin.__subclasses__():
                         print("name: %s" % plugin.__name__)
                         self.plugins[plugin.__name__] = plugin
