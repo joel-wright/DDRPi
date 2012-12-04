@@ -1,10 +1,10 @@
-__authors__ = ['Joel Wright']
+__authors__ = ["Joel Wright"]
 
 from plugins_test import registry
 from plugins_base import TestPlugin
 
-class TestPlugin1(TestPlugin):
-    name = "TestPlugin1"
+class TestPlugin2(TestPlugin):
+    name = "TestPlugin2"
     version = 0.01
     
     def __init__(self):
@@ -14,10 +14,11 @@ class TestPlugin1(TestPlugin):
         self.configured = True
 
     def start(self):
-        print("Started TestPlugin1")
+        print("Started TestPlugin2")
 
     def stop(self):
-        print("Stopped TestPlugin1")
-
-plugin = TestPlugin1()
+        print("Stopped TestPlugin2")
+                    
+plugin = TestPlugin2()
 registry.register(plugin.name, plugin)
+                    

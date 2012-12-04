@@ -1,21 +1,10 @@
 __author__ = ['Joel Wright']
 
-import logging
 import os
 import sys
 import importlib
 import registry
-
-class TestPlugin(object):
-    def configure(self):
-        raise NotImplementedError
-
-    def start(self):
-        raise NotImplementedError
-
-    def stop(self):
-        raise NotImplementedError
-
+from plugins_base import TestPlugin
 
 class TestMainPlugins(object):
     def __init__(self):
@@ -27,7 +16,7 @@ class TestMainPlugins(object):
         """
         Load the plugins from the config plugin directory
         """
-        logging.info("Loading plugins from plugin directory")
+        print("Loading plugins from plugin directory")
         plugins_found = self.__find_plugins("plugins")
         print("Plugins found: %s" % self.plugins)
         
@@ -38,7 +27,7 @@ class TestMainPlugins(object):
         Returns:
             A list of plugins that can be loaded.
         """
-        logging.info("Searching for plugins in %s" % plugin_folder)
+        print("Searching for plugins in %s" % plugin_folder)
         plugins = []
         
         for root, dirs, files in os.walk(plugin_folder):
@@ -46,33 +35,13 @@ class TestMainPlugins(object):
                 if fname.endswith(".py") and not fname.startswith("__"):
                     fpath = os.path.join(root, fname)
                     mname = fpath.rsplit('.', 1)[0].replace('/', '.')
-                    sys.path.insert(0, plugin_folder)
                     importlib.import_module(mname)
-                    from plugins_test import TestPlugin
-                    for plugin in TestPlugin.__subclasses__():
-                        print("name: %s" % plugin.__name__)
-                        self.plugins[plugin.__name__] = plugin
+            
+            for plugin in TestPlugin.__subclasses__():
+                print("name: %s" % plugin.__name__)
+                self.plugins[plugin.__name__] = plugin
 
 
-class TestPlugin2(TestPlugin):
-    name = "TestPlugin2"
-    version = 0.01
-    
-    def __init__(self):
-        self.initialised = True
-    
-    def config(self):
-        self.configured = True
-
-    def start(self):
-        print("Started TestPlugin2")
-
-    def stop(self):
-        print("Stopped TestPlugin2")
-
-plugin = TestPlugin2()
-registry.register(plugin.name, plugin)
-                    
 # Start the test
 if __name__ == "__main__":
 	test = TestMainPlugins()
