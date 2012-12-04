@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import importlib
+import registry
 
 class TestPlugin(object):
     def configure(self):
@@ -20,6 +21,7 @@ class TestMainPlugins(object):
     def __init__(self):
         self.plugins = {}
         self.__load_plugins()
+        print("Registered Plugins %s" % registry.items())
 
     def __load_plugins(self):
         """
@@ -45,8 +47,8 @@ class TestMainPlugins(object):
                     fpath = os.path.join(root, fname)
                     mname = fpath.rsplit('.', 1)[0].replace('/', '.')
                     sys.path.insert(0, plugin_folder)
-                    module = importlib.import_module(mname)
-		    from plugins_test import TestPlugin
+                    importlib.import_module(mname)
+                    from plugins_test import TestPlugin
                     for plugin in TestPlugin.__subclasses__():
                         print("name: %s" % plugin.__name__)
                         self.plugins[plugin.__name__] = plugin
@@ -67,7 +69,9 @@ class TestPlugin2(TestPlugin):
 
     def stop(self):
         print("Stopped TestPlugin2")
-                    
+
+plugin = TestPlugin2()
+registry.register(plugin.name, plugin)
                     
 # Start the test
 if __name__ == "__main__":
