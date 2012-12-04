@@ -1,11 +1,10 @@
 __authors__ = ["Joel Wright"]
 
-from plugins_test import registry
 from plugins_base import TestPlugin
 
 class TestPlugin2(TestPlugin):
-    name = "TestPlugin2"
-    version = 0.01
+    __name__ = "TestPlugin2"
+    __version__ = 0.01
     
     def __init__(self):
         self.initialised = True
@@ -18,7 +17,4 @@ class TestPlugin2(TestPlugin):
 
     def stop(self):
         print("Stopped TestPlugin2")
-                    
-plugin = TestPlugin2()
-registry.register(plugin.name, plugin)
-                    
+ 

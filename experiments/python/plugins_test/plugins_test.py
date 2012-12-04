@@ -3,24 +3,16 @@ __author__ = ['Joel Wright']
 import os
 import sys
 import importlib
-import registry
 from plugins_base import TestPlugin
+from plugins_base import PluginRegistry
 
 class TestMainPlugins(object):
     def __init__(self):
-        self.plugins = {}
-        self.__load_plugins()
-        print("Registered Plugins %s" % registry.items())
+        self.__registry__ = PluginRegistry()
+        self.__register_plugins("plugins")
+        print("Registered Plugins %s" % self.__registry__.items())
 
-    def __load_plugins(self):
-        """
-        Load the plugins from the config plugin directory
-        """
-        print("Loading plugins from plugin directory")
-        plugins_found = self.__find_plugins("plugins")
-        print("Plugins found: %s" % self.plugins)
-        
-    def __find_plugins(self, plugin_folder):
+    def __register_plugins(self, plugin_folder):
         """
         Find the loadable plugins in the given plugin folder.
         
@@ -39,7 +31,8 @@ class TestMainPlugins(object):
             
             for plugin in TestPlugin.__subclasses__():
                 print("name: %s" % plugin.__name__)
-                self.plugins[plugin.__name__] = plugin
+                pinst = plugin()
+                self.__registry__.register(pinst.__name__, pinst)
 
 
 # Start the test
