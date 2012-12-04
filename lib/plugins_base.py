@@ -1,4 +1,4 @@
-__authors__ = ["Joel Wright"]
+__authors__ = ['Joel Wright','Mark McArdle']
 
 class DDRPiPlugin(object):
     def configure(self):

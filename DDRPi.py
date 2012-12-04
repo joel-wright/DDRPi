@@ -1,4 +1,4 @@
-__author__ = ['Joel Wright']
+__authors__ = ['Joel Wright','Mark McArdle']
 
 import gtk
 import cairo
