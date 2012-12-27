@@ -1,6 +1,5 @@
 __authors__ = ['Joel Wright']
 
-import gtk
 from DDRPi import DDRPiPlugin
 
 class SimplePlugin(DDRPiPlugin):
@@ -22,10 +21,14 @@ class SimplePlugin(DDRPiPlugin):
         Stop writing to the surface and clean up
         """
 
-    def on_timer(self):
+    def modify(self):
         """
         We'll probably need a timer event for the plugin so that we can animate
         the updates.
         """
         # TODO: A simple animated display
-        return False
+        
+    def draw(self)
+		"""
+		Draw the internal representation onto the floor so we can start again
+		"""

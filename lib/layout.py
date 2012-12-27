@@ -1,9 +1,8 @@
 __authors__ = ['Joel Wright']
 
-import gtk
 from DDRPi import Plugin
 
-class DisplayLayout(gtk.DrawingArea):
+class DisplayLayout(object):
     def __init__(self, config):
         super(DisplayLayout, self).__init__()
         load_config(config)
@@ -60,9 +59,7 @@ class DisplayLayout(gtk.DrawingArea):
                 y_extent = max_y
                 
         return (x_extent, y_extent)
-        
-    # TODO: More interactions and allow reconfiguration
-        
+                
         
 
 

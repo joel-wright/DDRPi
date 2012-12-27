@@ -18,6 +18,7 @@ class DDRPiPlugin(object):
         Stop the plugin if necessary - e.g. stop writing to the dance surface.
         """
         raise NotImplementedError
+        
 
 class PluginRegistry(object):
     def __init__(self):
