@@ -1,6 +1,7 @@
 # Main option config
 system:
   plugin_dir: plugins
+  tty: /dev/ttyUSB0
 
 # Module layout config (we may change this later)
 modules:

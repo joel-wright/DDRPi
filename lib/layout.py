@@ -9,22 +9,14 @@ class DisplayLayout(object):
 
     def load_config(self, config):
         self.tile_config = config
-
-    def expose(self):
-        """
-        Whenever the widget is exposed, draw the module layout to the display.
-        """
-        draw_modules()
         
     def draw_modules(self):
         """
-        Draw the modules layout onto the drawing area. This method draws the
+        Draw the modules layout to the console. This method draws the
         described layout onto the display, labelling the pixels with their
         dance floor address.
         """
         (size_x, size_y) = calculate_floor_size()
-        
-        # TODO: Draw the layout onto the widget
         
     def calculate_floor_size(self):
         """
