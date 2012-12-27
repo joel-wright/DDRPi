@@ -1,6 +1,7 @@
 __authors__ = ['Joel Wright']
 
 from DDRPi import Plugin
+from numpy import *
 
 class DisplayLayout(object):
     def __init__(self, config):
@@ -8,16 +9,59 @@ class DisplayLayout(object):
         load_config(config)
 
     def load_config(self, config):
-        self.tile_config = config
+        self.module_config = config
+        self.pixel_mapping = calculate_mapping()
         
-    def draw_modules(self):
-        """
+    def draw_layout(self):
+		"""
         Draw the modules layout to the console. This method draws the
         described layout onto the display, labelling the pixels with their
         dance floor address.
         """
-        (size_x, size_y) = calculate_floor_size()
         
+    def calculate_mapping(self):
+        """
+        Calculate the mapping from (x,y) dance floor coordinate to dance floor
+        serial position.
+        """
+        (size_x, size_y) = calculate_floor_size()
+        layout_mapping = arange(size_x*size_y).reshape(size_x,size_y)
+        pixel_count = 0
+        
+        
+        for module in sorted(self.module_config.keys())
+            module_data = self.config[module]
+            module_orientation = module_data["orientation"]
+            module_height = module_data["height"]
+            module_width = module_data["width"]
+            
+            def add_north(height, width, pos_x, pos_y):
+				for y in range[pos_y, pos_y + height]:
+					for x in range[pos_x, pos_x + width]:
+						layout_mapping[x][y] = pixel_count
+						pixel_count += 1
+            
+            orientations = {
+                'N': add_north(module_data["height"],
+							   module_data["width"]
+							   module_data["x_position"],
+							   module_data["y_position"]),
+                'E':  add_east(module_data["height"],
+							   module_data["width"]
+							   module_data["x_position"],
+							   module_data["y_position"]),
+                'S': add_south(module_data["height"],
+							   module_data["width"]
+							   module_data["x_position"],
+							   module_data["y_position"]),
+                'W':  add_west(module_data["height"],
+							   module_data["width"]
+							   module_data["x_position"],
+							   module_data["y_position"]),
+            }
+            
+        return layout_mapping    
+            
     def calculate_floor_size(self):
         """
         Calculate the total size in pixels described by the config file. Note
@@ -32,7 +76,7 @@ class DisplayLayout(object):
         """
         x_extent, y_extent = 0
         
-        for module in self.config:
+        for module in sorted(self.module_config.keys):
             module_data = self.config[module]
             module_orientation = module_data["orientation"]
             module_height = module_data["height"]
