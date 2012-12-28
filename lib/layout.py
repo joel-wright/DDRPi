@@ -1,7 +1,6 @@
 __authors__ = ['Joel Wright']
 
 from DDRPi import Plugin
-from numpy import *
 
 class DisplayLayout(object):
     def __init__(self, config):
@@ -18,6 +17,7 @@ class DisplayLayout(object):
         described layout onto the display, labelling the pixels with their
         dance floor address.
         """
+        for
         
     def calculate_mapping(self):
         """
@@ -25,7 +25,9 @@ class DisplayLayout(object):
         serial position.
         """
         (size_x, size_y) = calculate_floor_size()
-        layout_mapping = arange(size_x*size_y).reshape(size_x,size_y)
+        # Create a list of lists filled with None, then we can populate with
+        # the serial location if present
+        layout_mapping = [[ None for x in range(0,size_x)] for y in range(0,size_y)]
         pixel_count = 0
         
         
@@ -36,11 +38,29 @@ class DisplayLayout(object):
             module_width = module_data["width"]
             
             def add_north(height, width, pos_x, pos_y):
-				for y in range[pos_y, pos_y + height]:
-					for x in range[pos_x, pos_x + width]:
+				for y in range(pos_y, pos_y + height):
+					for x in range(pos_x, pos_x + width):
 						layout_mapping[x][y] = pixel_count
 						pixel_count += 1
-            
+						
+			def add_east(height, width, pos_x, pos_y):
+				for x in reversed(range(pos_x, pos_x + height)):
+					for y in range[pos_y, pos_y + width]:
+						layout_mapping[x][y] = pixel_count
+						pixel_count += 1
+						
+			def add_south(height, width, pos_x, pos_y):
+				for y in reversed(range(pos_y, pos_y + height)):
+					for x in reversed(range(pos_x, pos_x + width)):
+						layout_mapping[x][y] = pixel_count
+						pixel_count += 1
+						
+			def add_west(height, width, pos_x, pos_y):
+				for x in range(pos_x, pos_x + height):
+					for y in reversed(range(pos_y, pos_y + width)):
+						layout_mapping[x][y] = pixel_count
+						pixel_count += 1
+			
             orientations = {
                 'N': add_north(module_data["height"],
 							   module_data["width"]
@@ -52,7 +72,7 @@ class DisplayLayout(object):
 							   module_data["y_position"]),
                 'S': add_south(module_data["height"],
 							   module_data["width"]
-							   module_data["x_position"],
+							   module_data["x_postion"],
 							   module_data["y_position"]),
                 'W':  add_west(module_data["height"],
 							   module_data["width"]
