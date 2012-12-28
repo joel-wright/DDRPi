@@ -37,54 +37,54 @@ class DisplayLayout(object):
 		layout_mapping = [[ None for x in range(0,self.size_x)] for y in range(0,self.size_y)]
 		pixel_count = 0
 		
-			for module in sorted(self.module_config.keys())
-				module_data = self.config[module]
-				module_orientation = module_data["orientation"]
-				module_height = module_data["height"]
-				module_width = module_data["width"]
-				
-			def add_north(height, width, pos_x, pos_y):
-				for y in range(pos_y, pos_y + height):
-					for x in range(pos_x, pos_x + width):
-						layout_mapping[x][y] = pixel_count
-						pixel_count += 1
+		def add_north(height, width, pos_x, pos_y):
+			for y in range(pos_y, pos_y + height):
+				for x in range(pos_x, pos_x + width):
+					layout_mapping[x][y] = pixel_count
+					pixel_count += 1
 						
-			def add_east(height, width, pos_x, pos_y):
-				for x in reversed(range(pos_x, pos_x + height)):
-					for y in range[pos_y, pos_y + width]:
-						layout_mapping[x][y] = pixel_count
-						pixel_count += 1
+		def add_east(height, width, pos_x, pos_y):
+			for x in reversed(range(pos_x, pos_x + height)):
+				for y in range[pos_y, pos_y + width]:
+					layout_mapping[x][y] = pixel_count
+					pixel_count += 1
 						
-			def add_south(height, width, pos_x, pos_y):
-				for y in reversed(range(pos_y, pos_y + height)):
-					for x in reversed(range(pos_x, pos_x + width)):
-						layout_mapping[x][y] = pixel_count
-						pixel_count += 1
+		def add_south(height, width, pos_x, pos_y):
+			for y in reversed(range(pos_y, pos_y + height)):
+				for x in reversed(range(pos_x, pos_x + width)):
+					layout_mapping[x][y] = pixel_count
+					pixel_count += 1
 						
-			def add_west(height, width, pos_x, pos_y):
-				for x in range(pos_x, pos_x + height):
-					for y in reversed(range(pos_y, pos_y + width)):
-						layout_mapping[x][y] = pixel_count
-						pixel_count += 1
-			
-				orientations = {
-						'N': add_north(module_data["height"],
-						               module_data["width"]
-						               module_data["x_position"],
-						               module_data["y_position"]),
-						'E':  add_east(module_data["height"],
-						               module_data["width"]
-						               module_data["x_position"],
-						               module_data["y_position"]),
-						'S': add_south(module_data["height"],
-						               module_data["width"]
-						               module_data["x_postion"],
-						               module_data["y_position"]),
-						'W':  add_west(module_data["height"],
-						               module_data["width"]
-						               module_data["x_position"],
-						               module_data["y_position"]),
-				}
+		def add_west(height, width, pos_x, pos_y):
+			for x in range(pos_x, pos_x + height):
+				for y in reversed(range(pos_y, pos_y + width)):
+					layout_mapping[x][y] = pixel_count
+					pixel_count += 1
+
+		for module in sorted(self.module_config.keys()):
+			module_data = self.config[module]
+			module_orientation = module_data["orientation"]
+			module_height = module_data["height"]
+			module_width = module_data["width"]
+	
+			orientations = {
+					'N': add_north(module_data["height"],
+					               module_data["width"]
+					               module_data["x_position"],
+					               module_data["y_position"]),
+					'E':  add_east(module_data["height"],
+					               module_data["width"]
+					               module_data["x_position"],
+					               module_data["y_position"]),
+					'S': add_south(module_data["height"],
+					               module_data["width"]
+					               module_data["x_postion"],
+					               module_data["y_position"]),
+					'W':  add_west(module_data["height"],
+					               module_data["width"]
+					               module_data["x_position"],
+					               module_data["y_position"]),
+			}
 				
 		return layout_mapping	 
 				
