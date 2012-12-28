@@ -9,6 +9,7 @@ class DisplayLayout(object):
 
     def load_config(self, config):
         self.module_config = config
+        (self.size_x, self.size_y) = calculate_floor_size()
         self.pixel_mapping = calculate_mapping()
         
     def draw_layout(self):
@@ -17,19 +18,24 @@ class DisplayLayout(object):
         described layout onto the display, labelling the pixels with their
         dance floor address.
         """
-        for
+        s = ""
+        
+        for y in range(0,self.size_y):
+			for x in range(0,self.size_x):
+				s += "%04s " % self.pixel_mapping[x][y]
+			s += "\n"
+			
+		print(s)
         
     def calculate_mapping(self):
         """
         Calculate the mapping from (x,y) dance floor coordinate to dance floor
         serial position.
         """
-        (size_x, size_y) = calculate_floor_size()
         # Create a list of lists filled with None, then we can populate with
         # the serial location if present
-        layout_mapping = [[ None for x in range(0,size_x)] for y in range(0,size_y)]
+        layout_mapping = [[ None for x in range(0,self.size_x)] for y in range(0,self.size_y)]
         pixel_count = 0
-        
         
         for module in sorted(self.module_config.keys())
             module_data = self.config[module]
