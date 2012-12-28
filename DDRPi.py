@@ -6,100 +6,100 @@ from layout import DisplayLayout
 from plugins_base import DDRPiPlugin, PluginRegistry
 
 class DanceSurface(object):
-    """
-    The class representing the drawable dance floor. This is a wrapper around
-    an internal representation of the dance floor, so that plugins need only
-    write images using (x,y) coordinates and don't have to worry about the
-    configuration of dance floor tiles. The dance surface is passed to the
-    display plugins, and reacts to any changes made by sending the the
-    appropriate updates to the dance floor through the serial port.
-    """
-    def __init__(self, width, height):
-        super(DanceSurface, self).__init__()
+	"""
+	The class representing the drawable dance floor. This is a wrapper around
+	an internal representation of the dance floor, so that plugins need only
+	write images using (x,y) coordinates and don't have to worry about the
+	configuration of dance floor tiles. The dance surface is passed to the
+	display plugins, and reacts to any changes made by sending the the
+	appropriate updates to the dance floor through the serial port.
+	"""
+	def __init__(self, width, height):
+		super(DanceSurface, self).__init__()
 
-        self.width = width
-        self.height = height
-        # TODO: Surface representation
-        # self.surface = 
+		self.width = width
+		self.height = height
+		# TODO: Surface representation
+		# self.surface = 
 
-    def update_dance_surface(self, updates):
-        # TODO: Make updates to internal representation
-        # TODO: Draw output to the serial port
+	def update_dance_surface(self, updates):
+		# TODO: Make updates to internal representation
+		# TODO: Draw output to the serial port
 
 
 class DDRPi(object):
-    """
-    The Main class - should load plugins and manage access to the DanceSurface object
-    """
-    def __init__(self):
-        """
-        Initialise the DDRPi Controller app.
-        """
-        super(DDRPi, self).__init__()
+	"""
+	The Main class - should load plugins and manage access to the DanceSurface object
+	"""
+	def __init__(self):
+		"""
+		Initialise the DDRPi Controller app.
+		"""
+		super(DDRPi, self).__init__()
 
-        logging.info("DDRPi starting...")
-        
-        # Load the application config
-        self.config = self.__load_config()
-        
-        # Set up plugin registry
-        self.__registry__ = PluginRegistry()
-        self.__register_plugins(self.config["system"]["plugin_dir"])
-        
-        # Create the layout object and calculate floor size
-        self.layout = DisplayLayout(self.config["modules"])
-        (x,y) = self.layout.calculate_floor_size()
-        
-        # Create the dance floor widget
-        self.dance_surface = DanceSurface(x,y)
-        self.plugins = []
+		logging.info("DDRPi starting...")
+		
+		# Load the application config
+		self.config = self.__load_config()
+		
+		# Set up plugin registry
+		self.__registry__ = PluginRegistry()
+		self.__register_plugins(self.config["system"]["plugin_dir"])
+		
+		# Create the layout object and calculate floor size
+		self.layout = DisplayLayout(self.config["modules"])
+		(x,y) = self.layout.calculate_floor_size()
+		
+		# Create the dance floor widget
+		self.dance_surface = DanceSurface(x,y)
+		self.plugins = []
 
-    def __load_config(self):
-        """
-        Load the config file into a dictionary.
-        
-        Returns:
-            The dictionary resulting from loading the YAML config file.
-        """
-        f = open('config.yaml')
-        data = yaml.load(f)
-        f.close()
-        return data
-        
-    def __register_plugins(self, plugin_folder):
-        """
-        Find the loadable plugins in the given plugin folder.
-        
-        Returns:
-            A list of plugins that can be loaded.
-        """
-        print("Searching for plugins in %s" % plugin_folder)
-        plugins = []
-        
-        for root, dirs, files in os.walk(plugin_folder):
-            for fname in files:
-                if fname.endswith(".py") and not fname.startswith("__"):
-                    fpath = os.path.join(root, fname)
-                    mname = fpath.rsplit('.', 1)[0].replace('/', '.')
-                    importlib.import_module(mname)
-            
-            for plugin in DDRPiPlugin.__subclasses__():
-                print("name: %s" % plugin.__name__)
-                pinst = plugin()
-                self.__registry__.register(pinst.__name__, pinst)
-        
-    def changed_layout(self, widget):
-        """
-        Called on layout change to dedefine the DanceFloor size/shape
-        """
-        # Get the new size and shape
-        (x,y) = self.layout.calculate_floor_size()
-        
-        # Create a new dance surface
-        self.dance_surface = DanceSurface(x, y)
-        
-        # TODO: Reconfigure the running plugin (or reload the running plugin)
-        #       Need to create a layout changed event
+	def __load_config(self):
+		"""
+		Load the config file into a dictionary.
+		
+		Returns:
+			The dictionary resulting from loading the YAML config file.
+		"""
+		f = open('config.yaml')
+		data = yaml.load(f)
+		f.close()
+		return data
+		
+	def __register_plugins(self, plugin_folder):
+		"""
+		Find the loadable plugins in the given plugin folder.
+		
+		Returns:
+			A list of plugins that can be loaded.
+		"""
+		print("Searching for plugins in %s" % plugin_folder)
+		plugins = []
+		
+		for root, dirs, files in os.walk(plugin_folder):
+			for fname in files:
+				if fname.endswith(".py") and not fname.startswith("__"):
+					fpath = os.path.join(root, fname)
+					mname = fpath.rsplit('.', 1)[0].replace('/', '.')
+					importlib.import_module(mname)
+			
+			for plugin in DDRPiPlugin.__subclasses__():
+				print("name: %s" % plugin.__name__)
+				pinst = plugin()
+				self.__registry__.register(pinst.__name__, pinst)
+		
+	def changed_layout(self, widget):
+		"""
+		Called on layout change to dedefine the DanceFloor size/shape
+		"""
+		# Get the new size and shape
+		(x,y) = self.layout.calculate_floor_size()
+		
+		# Create a new dance surface
+		self.dance_surface = DanceSurface(x, y)
+		
+		# TODO: Reconfigure the running plugin (or reload the running plugin)
+		#	   Need to create a layout changed event
 
 	def main_loop(self)
 		"""
