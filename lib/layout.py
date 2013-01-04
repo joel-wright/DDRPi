@@ -1,7 +1,5 @@
 __authors__ = ['Joel Wright']
 
-from DDRPi import Plugin
-
 class DisplayLayout(object):
 	def __init__(self, config):
 		super(DisplayLayout, self).__init__()
