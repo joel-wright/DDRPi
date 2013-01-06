@@ -1,7 +1,8 @@
 __authors__ = ['Joel Wright','Mark McArdle']
 
-import yaml
 import logging
+import pygame
+import yaml
 from layout import DisplayLayout
 from plugins_base import DDRPiPlugin, PluginRegistry
 
@@ -53,7 +54,6 @@ class DDRPi(object):
 		# Create the dance floor widget
 		self.dance_surface = DanceSurface(x,y)
 		self.plugins = []
-		self.events = []
 
 	def __load_config(self):
 		"""

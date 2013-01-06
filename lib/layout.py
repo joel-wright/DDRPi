@@ -1,14 +1,16 @@
 __authors__ = ['Joel Wright']
 
+import logging
+
 class DisplayLayout(object):
 	def __init__(self, config):
-		super(DisplayLayout, self).__init__()
-		load_config(config)
+		#super(DisplayLayout, self).__init__()
+		self.load_config(config)
 
 	def load_config(self, config):
 		self.module_config = config
-		(self.size_x, self.size_y) = calculate_floor_size()
-		self.pixel_mapping = calculate_mapping()
+		(self.size_x, self.size_y) = self.calculate_floor_size()
+		self.calculate_mapping()
 			
 	def draw_layout(self):
 		"""
@@ -16,14 +18,47 @@ class DisplayLayout(object):
 		described layout onto the display, labelling the pixels with their
 		dance floor address.
 		"""
-		s = ""
-		
+		s = ""		
 		for y in range(0,self.size_y):
 			for x in range(0,self.size_x):
-				s += "%04s " % self.pixel_mapping[x][y]
+				s += "%04s " % self.layout_mapping[x][y]
 			s += "\n"
-			
-		print(s)
+		return s
+				
+	def add_north(self, height, width, pos_x, pos_y):
+		for y in range(pos_y, pos_y + height):
+			for x in range(pos_x, pos_x + width):
+				if self.layout_mapping[x][y] is not None:
+					logging.error("The config appears to contain overlapping tiles")
+				self.layout_mapping[x][y] = self.pixel_count
+				self.pixel_count += 1
+					
+	def add_east(self, height, width, pos_x, pos_y):
+		for x in range(pos_x, pos_x + height):
+			for y in reversed(range(pos_y, pos_y + width)):
+				if self.layout_mapping[x][y] is not None:
+					logging.error("The config appears to contain overlapping tiles")
+				self.layout_mapping[x][y] = self.pixel_count
+				self.pixel_count += 1
+					
+	def add_south(self, height, width, pos_x, pos_y):
+		for y in reversed(range(pos_y, pos_y + height)):
+			for x in reversed(range(pos_x, pos_x + width)):
+				if self.layout_mapping[x][y] is not None:
+					logging.error("The config appears to contain overlapping tiles")
+				self.layout_mapping[x][y] = self.pixel_count
+				self.pixel_count += 1
+		return True
+					
+	def add_west(self, height, width, pos_x, pos_y):
+		for x in reversed(range(pos_x, pos_x + height)):
+			for y in range(pos_y, pos_y + width):
+				if self.layout_mapping[x][y] is not None:
+					logging.error("The config appears to contain overlapping tiles")
+				self.layout_mapping[x][y] = self.pixel_count
+				self.pixel_count += 1
+		return True
+		
 		
 	def calculate_mapping(self):
 		"""
@@ -32,59 +67,37 @@ class DisplayLayout(object):
 		"""
 		# Create a list of lists filled with None, then we can populate with
 		# the serial location if present
-		layout_mapping = [[ None for x in range(0,self.size_x)] for y in range(0,self.size_y)]
-		pixel_count = 0
+		self.layout_mapping = [[None for y in range(0,self.size_y)] for x in range(0,self.size_x)]
+		self.pixel_count = 0
 		
-		def add_north(height, width, pos_x, pos_y):
-			for y in range(pos_y, pos_y + height):
-				for x in range(pos_x, pos_x + width):
-					layout_mapping[x][y] = pixel_count
-					pixel_count += 1
-						
-		def add_east(height, width, pos_x, pos_y):
-			for x in reversed(range(pos_x, pos_x + height)):
-				for y in range[pos_y, pos_y + width]:
-					layout_mapping[x][y] = pixel_count
-					pixel_count += 1
-						
-		def add_south(height, width, pos_x, pos_y):
-			for y in reversed(range(pos_y, pos_y + height)):
-				for x in reversed(range(pos_x, pos_x + width)):
-					layout_mapping[x][y] = pixel_count
-					pixel_count += 1
-						
-		def add_west(height, width, pos_x, pos_y):
-			for x in range(pos_x, pos_x + height):
-				for y in reversed(range(pos_y, pos_y + width)):
-					layout_mapping[x][y] = pixel_count
-					pixel_count += 1
-
 		for module in sorted(self.module_config.keys()):
-			module_data = self.config[module]
+			module_data = self.module_config[module]
 			module_orientation = module_data["orientation"]
 			module_height = module_data["height"]
 			module_width = module_data["width"]
 	
-			orientations = {
-					'N': add_north(module_data["height"],
-					               module_data["width"]
-					               module_data["x_position"],
-					               module_data["y_position"]),
-					'E':  add_east(module_data["height"],
-					               module_data["width"]
-					               module_data["x_position"],
-					               module_data["y_position"]),
-					'S': add_south(module_data["height"],
-					               module_data["width"]
-					               module_data["x_postion"],
-					               module_data["y_position"]),
-					'W':  add_west(module_data["height"],
-					               module_data["width"]
-					               module_data["x_position"],
-					               module_data["y_position"]),
-			}
-				
-		return layout_mapping	 
+			if module_orientation == 'N':
+				self.add_north(module_data["height"],
+				               module_data["width"],
+				               module_data["x_position"],
+				               module_data["y_position"])
+			elif module_orientation == 'E':
+				self.add_east(module_data["height"],
+				              module_data["width"],
+				              module_data["x_position"],
+				              module_data["y_position"])
+			elif module_orientation == 'S':
+				self.add_south(module_data["height"],
+				               module_data["width"],
+				               module_data["x_position"],
+				               module_data["y_position"])
+			elif module_orientation == 'W':
+				self.add_west(module_data["height"],
+				              module_data["width"],
+				              module_data["x_position"],
+				              module_data["y_position"])
+			else:
+				logging.error("The orientation of a tile in the config was not recognised")	 
 				
 	def calculate_floor_size(self):
 		"""
@@ -98,10 +111,11 @@ class DisplayLayout(object):
 				A pair containing the maximum x and y coordinated required by the
 				dance floor
 		"""
-		x_extent, y_extent = 0
+		x_extent = 0
+		y_extent = 0
 		
-		for module in sorted(self.module_config.keys):
-			module_data = self.config[module]
+		for module in sorted(self.module_config.keys()):
+			module_data = self.module_config[module]
 			module_orientation = module_data["orientation"]
 			module_height = module_data["height"]
 			module_width = module_data["width"]
