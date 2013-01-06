@@ -27,8 +27,8 @@ class PluginRegistry(object):
 	def register(self, name, item):
 		self.__registry__[name] = item
 
-	def values(self):
-		return self.__registry__.values()
-
-	def items(self):
-		return self.__registry__.items()
+	def get_names(self):
+		return self.__registry__.keys()
+		
+	def get_plugin(self, name):
+		return self.__registry__.[name]
