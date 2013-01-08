@@ -17,13 +17,34 @@ class DanceSurface(object):
 	display plugins, and reacts to any changes made by sending the the
 	appropriate updates to the dance floor through the serial port.
 	"""
-	def __init__(self, width, height):
+	def __init__(self, config):
 		super(DanceSurface, self).__init__()
 
-		self.width = width
-		self.height = height
-		# TODO: Surface representation
-		# self.surface = 
+		# Create the layout object and calculate floor size
+		self.layout = DisplayLayout(config)
+		(self.width, self.height) = self.layout.calculate_floor_size()
+		total_pixels = self.width * self.height 
+		self.pixels = [ 0 for n in range(0, 3*total_pixels) + 1 ]
+		# The last element of the pixel array is the sync byte 
+		self.pixels[total_pixels] = 1
+		
+	def hexToTuple(rgb_tuple):
+		""" convert an (R, G, B) tuple to hex #RRGGBB """
+		hex_colour = '#%02x%02x%02x' % rgb_tuple
+		return hex_colour
+
+	def tupleToHex(hex_colour):
+		""" convert hex #RRGGBB to an (R, G, B) tuple """
+		hex_colour = hex_colour.strip()
+		if hex_colour[0] == '#':
+			hex_colour = hex_colour[1:]
+		if len(hex_colour) != 6:
+			raise ValueError, "input #%s is not in #RRGGBB format" % hex_colour
+		(rs, gs, bs) = hex_colour[:2], hex_colour[2:4], hex_colour[4:]
+		r = int(rs, 16)
+		g = int(gs, 16)
+		b = int(bs, 16)
+		return (r, g, b)
 
 	def blit(self):
 		"""
@@ -42,6 +63,7 @@ class DanceSurface(object):
 		Set the value of the pixel at (x,y) to colour
 		"""
 		# TODO: Set the colour of the given pixel to the given colour
+		
 		
 	# TODO: More drawing primitives:
 	# def draw_line
@@ -67,13 +89,9 @@ class DDRPi(object):
 		# Set up plugin registry
 		self.__registry__ = PluginRegistry()
 		self.__register_plugins(self.config["system"]["plugin_dir"])
-		
-		# Create the layout object and calculate floor size
-		self.layout = DisplayLayout(self.config["modules"])
-		(x,y) = self.layout.calculate_floor_size()
-		
-		# Create the dance floor widget
-		self.dance_surface = DanceSurface(x,y)
+
+		# Create the dance floor surface
+		self.dance_surface = DanceSurface(self.config["modules"])
 		
 		# Initialise pygame
 		pygame.init()
