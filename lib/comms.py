@@ -5,11 +5,10 @@ import threading
 import os
 
 class FloorComms(object):
-	def __init__(self, tty, pixels):
+	def __init__(self, tty):
 		self.tty = tty
-		self.baud = 1000000 # TODO: Calculate required baud rate with a cap
+		self.baud = 1000000
 		self.timeout = 1
-		self.pixels = pixels
 		self.s_port = serial.Serial(self.tty, self.baud, timeout=self.timeout)
 		
 	def configure(self, tty=None, baud=None, timeout=None, pixels=None)
@@ -22,9 +21,6 @@ class FloorComms(object):
 			changes = True
 		if timeout is not None:
 			self.timeout = timeout
-			changes = True
-		if pixels is not None:
-			self.pixels = pixels
 			changes = True
 			
 		if changes:

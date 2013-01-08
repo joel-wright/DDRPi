@@ -24,6 +24,12 @@ class DisplayLayout(object):
 				s += "%04s " % self.layout_mapping[x][y]
 			s += "\n"
 		return s
+		
+	def get_position(self, x, y):
+		if x >= self.size_x or y >= self.size_y:
+			raise ValueError, "The coordinate (%s,%s) is outside of the layout" % (x,y)
+		else:
+			return self.layout_mapping[x][y]
 				
 	def add_north(self, height, width, pos_x, pos_y):
 		for y in range(pos_y, pos_y + height):

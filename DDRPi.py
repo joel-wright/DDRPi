@@ -4,6 +4,7 @@ import logging
 import pygame
 import sys
 import yaml
+from comms import FloorComms
 from layout import DisplayLayout
 from plugins_base import DDRPiPlugin, PluginRegistry
 from pygame.locals import *
@@ -19,51 +20,59 @@ class DanceSurface(object):
 	"""
 	def __init__(self, config):
 		super(DanceSurface, self).__init__()
-
-		# Create the layout object and calculate floor size
-		self.layout = DisplayLayout(config)
+		# Create the floor communication object
+		self.comms = FloorComms(config.["system"].["tty"])
+		# Create the layout object and calculate floor size		self.layout = DisplayLayout(config.["modules"])
 		(self.width, self.height) = self.layout.calculate_floor_size()
-		total_pixels = self.width * self.height 
-		self.pixels = [ 0 for n in range(0, 3*total_pixels) + 1 ]
-		# The last element of the pixel array is the sync byte 
-		self.pixels[total_pixels] = 1
+		self.total_pixels = self.width * self.height
+		# Initialise all the pixels to black 
+		self.pixels = [ 0 for n in range(0, 3*self.total_pixels) ]
 		
 	def hexToTuple(rgb_tuple):
-		""" convert an (R, G, B) tuple to hex #RRGGBB """
+		"""
+		Convert an (R, G, B) tuple to hex #RRGGBB
+		"""
 		hex_colour = '#%02x%02x%02x' % rgb_tuple
 		return hex_colour
 
 	def tupleToHex(hex_colour):
-		""" convert hex #RRGGBB to an (R, G, B) tuple """
+		"""
+		Convert hex #RRGGBB to an (R, G, B) tuple
+		"""
 		hex_colour = hex_colour.strip()
 		if hex_colour[0] == '#':
 			hex_colour = hex_colour[1:]
 		if len(hex_colour) != 6:
 			raise ValueError, "input #%s is not in #RRGGBB format" % hex_colour
-		(rs, gs, bs) = hex_colour[:2], hex_colour[2:4], hex_colour[4:]
+		(rs,gs,bs) = hex_colour[:2], hex_colour[2:4], hex_colour[4:]
 		r = int(rs, 16)
 		g = int(gs, 16)
 		b = int(bs, 16)
-		return (r, g, b)
+		return (r,g,b)
 
 	def blit(self):
 		"""
 		Draw the updated floor to the serial port
 		"""
-		# TODO: Draw output to the serial port
+		self.comms.send_data(self.pixels)
 
 	def clear(self, colour)
 		"""
 		Clear the surface to a single colour
 		"""
-		# TODO: Set all pixels on the surface to the given colour
+		# Make sure we never send a 1 by mistake and screw up the frames
+		(r,g,b) = [ x if not x == 1 else 0 for x in self.hexToTuple(colour) ]
+		for x in range(0,self.total_pixels):
+			self.pixels[x*3:(x+1)*3] = [r,g,b]
 
 	def draw_pixel(self, x, y, colour)
 		"""
 		Set the value of the pixel at (x,y) to colour
 		"""
-		# TODO: Set the colour of the given pixel to the given colour
-		
+		# Make sure we never send a 1 by mistake and screw up the frames
+		(r,g,b) = [ x if not x == 1 else 0 for x in self.hexToTuple(colour) ]
+		mapped_pixel = 3 * self.layout.get_position(x,y)
+		self.pixels[mapped_pixel:mapped_pixel+3] = [r,g,b]
 		
 	# TODO: More drawing primitives:
 	# def draw_line
@@ -91,7 +100,7 @@ class DDRPi(object):
 		self.__register_plugins(self.config["system"]["plugin_dir"])
 
 		# Create the dance floor surface
-		self.dance_surface = DanceSurface(self.config["modules"])
+		self.dance_surface = DanceSurface(self.config)
 		
 		# Initialise pygame
 		pygame.init()
