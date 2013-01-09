@@ -3,7 +3,7 @@ __authors__ = ['Joel Wright']
 from DDRPi import DDRPiPlugin
 
 class SimplePlugin(DDRPiPlugin):
-	def config(self, config, image_surface):
+	def configure(self, config, image_surface):
 		"""
 		This is an example of an end user module - need to make sure we can get
 		the main image surface and config to write to them both...
@@ -15,20 +15,15 @@ class SimplePlugin(DDRPiPlugin):
 		"""
 		Start writing to the surface
 		"""
+		# Setup recurring events
 
 	def stop(self):
 		"""
 		Stop writing to the surface and clean up
 		"""
-
-	def modify(self):
-		"""
-		We'll probably need a timer event for the plugin so that we can animate
-		the updates.
-		"""
-		# TODO: A simple animated display
+		# Stop recurring events
 		
-	def draw(self)
+	def handle(self, event)
 		"""
-		Draw the internal representation onto the floor so we can start again
+		Handle the pygame event sent to the plugin from the main loop
 		"""

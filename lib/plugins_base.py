@@ -19,6 +19,12 @@ class DDRPiPlugin(object):
 		"""
 		raise NotImplementedError
 		
+	def handle(self, event):
+		"""
+		Handle any pygame events sent to the plugin from the main loop
+		"""
+		raise NotImplementedError
+		
 
 class PluginRegistry(object):
 	def __init__(self):
