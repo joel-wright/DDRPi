@@ -11,6 +11,9 @@ class SimplePlugin(DDRPiPlugin):
 		self.ddrpi_config = config
 		self.ddrpi_surface = image_surface
 
+	def __name__(self):
+		return 'Simple Plugin'
+
 	def start(self):
 		"""
 		Start writing to the surface
@@ -27,8 +30,8 @@ class SimplePlugin(DDRPiPlugin):
 		the updates.
 		"""
 		# TODO: A simple animated display
-		
-	def draw(self)
+
+	def draw(self):
 		"""
 		Draw the internal representation onto the floor so we can start again
 		"""
