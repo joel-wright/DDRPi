@@ -1,12 +1,14 @@
 __authors__ = ['Joel Wright','Mark McArdle']
 
+import importlib
+import os
 import logging
 import pygame
 import sys
 import yaml
 from comms import FloorComms
-from layout import DisplayLayout
-from plugins_base import DDRPiPlugin, PluginRegistry
+from lib.layout import DisplayLayout
+from lib.plugins_base import DDRPiPlugin, PluginRegistry
 from pygame.locals import *
 
 class DanceSurface(object):
@@ -91,10 +93,10 @@ class DDRPi(object):
 		super(DDRPi, self).__init__()
 
 		logging.info("DDRPi starting...")
-		
+
 		# Load the application config
 		self.config = self.__load_config()
-		
+
 		# Set up plugin registry
 		self.__registry__ = PluginRegistry()
 		self.__register_plugins(self.config["system"]["plugin_dir"])
@@ -108,7 +110,7 @@ class DDRPi(object):
 	def __load_config(self):
 		"""
 		Load the config file into a dictionary.
-		
+
 		Returns:
 			The dictionary resulting from loading the YAML config file.
 		"""
@@ -116,7 +118,7 @@ class DDRPi(object):
 		data = yaml.load(f)
 		f.close()
 		return data
-		
+
 	def __register_plugins(self, plugin_folder):
 		"""
 		Find the loadable plugins in the given plugin folder.
@@ -129,14 +131,14 @@ class DDRPi(object):
 			for fname in files:
 				if fname.endswith(".py") and not fname.startswith("__"):
 					fpath = os.path.join(root, fname)
-					mname = fpath.rsplit('.', 1)[0].replace('/', '.')
+					mname = fpath.rsplit('.', 1)[0].replace('/', '.').replace('\\', '.')
 					importlib.import_module(mname)
-			
+
 			for plugin in DDRPiPlugin.__subclasses__():
 				print("name: %s" % plugin.__name__)
 				pinst = plugin()
 				self.__registry__.register(pinst.__name__, pinst)
-		
+
 	def changed_layout(self):
 		"""
 		Called on layout change to redefine the DanceFloor size/shape
@@ -145,14 +147,14 @@ class DDRPi(object):
 		"""
 		# Get the new size and shape
 		(x,y) = self.layout.calculate_floor_size()
-		
+
 		# Create a new dance surface
 		self.dance_surface = DanceSurface(x, y)
-		
+
 		# TODO: Reconfigure the running plugin (or reload the running plugin)
 		#	   Need to create a layout changed event
 
-	def main_loop(self)
+	def main_loop(self):
 		"""
 		Enter main event loop and start drawing to the floor
 		"""
