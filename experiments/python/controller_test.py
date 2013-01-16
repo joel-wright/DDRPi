@@ -12,7 +12,6 @@ class ControllerInputListener():
 
 class ControllerInput(threading.Thread):
 
-  keep_running = 1
   listeners = set()
 
   def __init__(self):
@@ -99,7 +98,7 @@ class ControllerInput(threading.Thread):
 
   def stop_running(self):
     print "Requesting shutdown"
-    self.keep_running=0
+    self.keep_running = 0
 
 class DummyProgram(ControllerInputListener):
 
