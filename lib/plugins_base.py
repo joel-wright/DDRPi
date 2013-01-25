@@ -25,6 +25,12 @@ class DDRPiPlugin(object):
 		"""
 		raise NotImplementedError
 		
+	def update_surface(self):
+		"""
+		Write the updated plugin state to the dance surface and blit
+		"""
+		raise NotImplementedError
+		
 
 class PluginRegistry(object):
 	def __init__(self):

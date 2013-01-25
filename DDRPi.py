@@ -178,11 +178,11 @@ class DDRPi(object):
 				
 				# active plugin handle e
 				logging.debug("Active plugin handling event: %s" % e)
-				self.active_plugin.handle_event(e)
+				self.active_plugin.handle(e)
 			
 			# Update the display
 			# We're just going as fast as the serial port will let us atm
-			self.dance_surface.blit()
+			self.active_plugin.update_surface()
 
 # Start the dance floor application
 if __name__ == "__main__":

@@ -30,3 +30,8 @@ class SimplePlugin(DDRPiPlugin):
 		"""
 		Handle the pygame event sent to the plugin from the main loop
 		"""
+		
+	def update_surface(self):
+		"""
+		Write the updated plugin state to the dance surface and blit
+		"""
