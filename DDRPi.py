@@ -24,7 +24,8 @@ class DanceSurface(object):
 		super(DanceSurface, self).__init__()
 		# Create the floor communication object
 		self.comms = FloorComms(config.["system"].["tty"])
-		# Create the layout object and calculate floor size		self.layout = DisplayLayout(config.["modules"])
+		# Create the layout object and calculate floor size
+		self.layout = DisplayLayout(config.["modules"])
 		(self.width, self.height) = self.layout.calculate_floor_size()
 		self.total_pixels = self.width * self.height
 		# Initialise all the pixels to black 

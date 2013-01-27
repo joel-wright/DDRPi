@@ -89,6 +89,7 @@ class TetrisPlugin(DDRPiPlugin):
 		Handle the pygame event sent to the plugin from the main loop
 		"""
 		# Update the boards according to the event
+		return None
 		
 	def update_surface(self):
 		"""
