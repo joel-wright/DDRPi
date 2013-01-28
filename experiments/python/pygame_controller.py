@@ -10,7 +10,13 @@ def main():
    while(True):
       events = pygame.event.get()
       for e in events:
-         print("%s" % e)
+         try:
+            x = e.value
+            if x is not None:
+               if not x == 0.0:
+                  print("%s" % e)
+         except Exception as ex:
+            print("%s" % e)
 
 if __name__ == "__main__":
    main()

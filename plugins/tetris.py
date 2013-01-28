@@ -68,8 +68,9 @@ class TetrisPlugin(DDRPiPlugin):
 		... multiple players and battles to come!
 		"""
 		self.ddrpi_config = config
-		self.ddrpi_surface = image_surface		
-		self.__reset__()
+		self.ddrpi_surface = image_surface
+		(width, height, factor) = self._get_game_dimensions()		
+		self._reset()
 		
 	def start(self):
 		"""
@@ -98,38 +99,100 @@ class TetrisPlugin(DDRPiPlugin):
 		self.__draw_state__()
 		self.ddrpi_surface.blit()
 
-	def __reset__(self):
+	def _reset(self):
 		# Wait (maybe paused)
 		self.game_state = {
 			'player1': {
 				'blocks' = [],
-				'current_tetromino': self.__select_tetromino(),
-				'current_tetromino_pos': None,
-				'current_orientation': 'N'
+				'current_tetromino': self._select_tetromino(),
+				'current_tetromino_pos': (self.width/2, -2),
+				'current_orientation': 0,
+				'rows_removed' = 0
 			},
 			'player2': {
 				'blocks' = [],
-				'current_tetromino': self.__select_tetromino(),
-				'current_tetromino_pos': None,
-				'current_orientation': 'N'
+				'current_tetromino': self._select_tetromino(),
+				'current_tetromino_pos': (self.width/2, -2),
+				'current_orientation': 0,
+				'rows_removed' = 0
 			}
 			'drop_timer': 300,
-		   'rows_removed' = 0
 		}
 
-	def __draw_state__(self):
+	def _select_tetromino(self):
+		"""
+		Randomly select a new piece
+		"""
+		rn = random.randint(0,6)
+		rt = __tetrominos__.keys()[rt]
+		t = __tetrominos__[rt]('N',self.width/2, -2)
+
+	def _drop(self, player):
+		"""
+		Keep moving the piece down until it hits something - record the new blocks
+		"""
+
+	def _move(self, player, delta):
+		"""
+		Move the tetromino for the given player in the direction specified by the
+		delta.
+		"""
+		(dx,dy) = delta
+		(cx,cy) = self.game_state[player]['current_tetromino_pos']
+		(nx,ny) = (cx+dx,cy+dy)
+		
+		if self._legal_move(player, (nx, ny)):
+			self.game_state[player]['current_tetromino_pos'] = (nx,ny)
+			return True
+		elif self._tetromino_has_landed(player, (nx,ny)):
+			self._add_fixed_blocks(player, (cx,cy))
+			return False
+		else:
+			# No move possible, but only left/right, so ignore the request
+			return False
+
+	def _rotate(self, player):
+		"""
+		Rotate the shape for the given player
+		"""
+		co = self.game_state[player]['current_orientation']
+		no = (co+1)%4
+		self.game_state[player]['current_orientation'] = no
+		
+		# TODO: Need to decide what to do for a rotation that can't happen
+		# and also decide whether a move is "legal"
+		
+	def _get_game_dimensions(self):
+		"""
+		Calculate the size of the 2 player gaming areas based on the surface
+		dimensions (including a multiplication factor for large dance surfaces).
+		"""
+		w = self.ddrpi_surface.width
+		h = self.ddrpi_surafce.height
+		
+		# We need the game boards to be multiples of 10 wide (and we need 2) so:
+		game_width_factor = w/20
+		extra_space = w%20
+		if game_width_factor == 0:
+			max_width = (w-3)/2
+			if max_width < 8:
+				logging.error("Not enough width!")
+		if extra_space < 1:
+			logging.error("Not enough padding")
+		
+		# We also need sufficient height for a game (usually 20 pixels, but we'll
+		# accept as low as 16 for a faster paced game
+		game_height_factor = h/20
+		if game_height_factor == 0:
+			max_height = h - 2
+			if max_height < 16:
+				logging.error("Not enough height!")
+		
+		return(max_width, max_height, min(game_width_factor, game_height_factor)
+
+	def _draw_state(self):
 		"""
 		Draw the game state of player 1 & 2 blocks appropriately to the surface.
 		This also handles the positioning of the 2 player game areas and
 		background.
-		"""
-
-	def __drop__(self, player):
-
-	def __rotate__(self, shape):
-		
-	def __get_game_dimensions__(self):
-		"""
-		Calculate the size of the 2 player gaming areas based on the surface
-		dimensions (including a multiplication factor for large dance surfaces).
 		"""
