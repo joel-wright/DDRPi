@@ -6,6 +6,7 @@ from DDRPi import DDRPiPlugin
 
 class TetrisPlugin(DDRPiPlugin):
 	
+	# Static maps to define the shape and rotation of tetrominos
 	__tetrominos__ = {
 		'L': lambda o,x,y: TetrisPlugin.__L__[o](x,y),
 		'J': lambda o,x,y: TetrisPlugin.__J__[o](x,y),
@@ -62,6 +63,31 @@ class TetrisPlugin(DDRPiPlugin):
 	
 	__orientations__ = ['N','E','S','W']
 	
+	# Static map from joystick axis information to direction delta
+	__delta__ = {
+		1: {
+			-1 : None, # We don't accept up moves! That's cheating ;)
+			1  : (0,1)
+		},
+		0: {
+			-1 : (-1,0),
+			1  : (1,0)
+		}
+	}
+	
+	# Static map from joypad to player name
+	__player__ = {
+		0: "player1",
+		1: "player2"
+	}
+	
+	# Button mappings
+	buttons = {
+		1: lambda: self._rotate(player, 1),
+		2: lambda: self._rotate(player, -1),
+		3: lambda: self._drop(player)
+	}
+	
 	def configure(self, config, image_surface):
 		"""
 		This is an end user plugin that plays a simple game of tetris...
@@ -90,7 +116,29 @@ class TetrisPlugin(DDRPiPlugin):
 		Handle the pygame event sent to the plugin from the main loop
 		"""
 		# Update the boards according to the event
-		return None
+		# No repeating events; you wanna move twice, push it twice
+		try:
+			(joypad, action, action_value) = {
+				"JoyButtonDown": (e.joy, "Button", e.button)
+				"JoyAxisMotion": (e.joy, "Axis",
+				                   TetrisPlugin.__direction__[e.axis][int(e.value)])
+			}[pygame.events.event_name(event.type)]
+		except Exception as ex:
+			# If we got an exception then we were asked to handle something
+			# that wasn't a joypad button press - ignore it
+			logging.debug("Tetris plugin tried to process a non-joypad event")
+		
+		if action == "Button":
+			# Handle the button
+			if action_value in TetrisPlugin.__buttons__:
+				TetrisPlugin.__buttons__[action_value]()
+			else:
+				logging.debug("Tetris Plugin: Button %s does nothing" % action_value)
+		elif action == "Axis":
+			# Handle the move
+			self._move(TetrisPlugin.__player__[joypad], action_value)
+		else:
+			logging.error("Somehow an action was neither a button nor a direction") 
 		
 	def update_surface(self):
 		"""
@@ -131,32 +179,40 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		Keep moving the piece down until it hits something - record the new blocks
 		"""
+		finished = False
+		
+		while not finished:
+			moved = self._move(player, (0,1))
+			finished = not(moved)
 
 	def _move(self, player, delta):
 		"""
 		Move the tetromino for the given player in the direction specified by the
 		delta.
 		"""
-		(dx,dy) = delta
-		(cx,cy) = self.game_state[player]['current_tetromino_pos']
-		(nx,ny) = (cx+dx,cy+dy)
-		
-		if self._legal_move(player, (nx, ny)):
-			self.game_state[player]['current_tetromino_pos'] = (nx,ny)
-			return True
-		elif self._tetromino_has_landed(player, (nx,ny)):
-			self._add_fixed_blocks(player, (cx,cy))
-			return False
+		if delta is not None:
+			(dx,dy) = delta
+			(cx,cy) = self.game_state[player]['current_tetromino_pos']
+			(nx,ny) = (cx+dx,cy+dy)
+			
+			if self._legal_move(player, (nx, ny)):
+				self.game_state[player]['current_tetromino_pos'] = (nx,ny)
+				return True
+			elif self._tetromino_has_landed(player, (nx,ny)):
+				self._add_fixed_blocks(player, (cx,cy))
+				return False
+			else:
+				# No move possible, but only left/right, so ignore the request
+				return False
 		else:
-			# No move possible, but only left/right, so ignore the request
 			return False
 
-	def _rotate(self, player):
+	def _rotate(self, player, dir_value):
 		"""
 		Rotate the shape for the given player
 		"""
 		co = self.game_state[player]['current_orientation']
-		no = (co+1)%4
+		no = (co+dir_value)%4
 		self.game_state[player]['current_orientation'] = no
 		
 		# TODO: Need to decide what to do for a rotation that can't happen
@@ -195,4 +251,12 @@ class TetrisPlugin(DDRPiPlugin):
 		Draw the game state of player 1 & 2 blocks appropriately to the surface.
 		This also handles the positioning of the 2 player game areas and
 		background.
+		
+		I - Green
+		O - Yellow
+		J - Blue
+		L - White
+		S - Red
+		Z - Magenta
+		T - Cyan
 		"""
