@@ -11,7 +11,7 @@ class FloorComms(object):
 		self.timeout = 1
 		self.s_port = serial.Serial(self.tty, self.baud, timeout=self.timeout)
 		
-	def configure(self, tty=None, baud=None, timeout=None, pixels=None)
+	def configure(self, tty=None, baud=None, timeout=None, pixels=None):
 		changes = False
 		if tty is not None:
 			self.tty = tty
@@ -26,17 +26,46 @@ class FloorComms(object):
 		if changes:
 			self.ser = serial.Serial(self.tty, self.baud, timeout=self.timeout)
 
-	def send_data(data_buffer):
+	def send_data(self,data_buffer):
 		for i in data_buffer:
-			ser.write(chr(i%256))
-		ser.write(chr(1))
+			self.ser.write(chr(i%256))
+		self.ser.write(chr(1))
 
-	def clear():  
+	def clear(self):  
 		for i in range(self.pixels*3):
-			ser.write(chr(0))
-		ser.write(chr(1))
+			self.ser.write(chr(0))
+		self.ser.write(chr(1))
 
-	def get_blank_buffer():
+	def get_blank_buffer(self):
+		blank_buffer = []
+		for i in range(self.pixels*3):
+			blank_buffer.append(0)
+		return blank_buffer
+
+class DebugComms(object):
+	def __init__(self, pipe):
+		self.pipe = open(pipe,'w')
+		
+	def configure(self, tty=None, baud=None, timeout=None, pixels=None):
+		return None
+
+	def send_data(self,data_buffer):
+		s = ""
+		for i in data_buffer:
+			v = hex(i)
+			if len(v) < 2:
+				s += "\\x0%s" % v
+			else:
+				s += "\\x0%s" % v
+		self.pipe.write("%s\n" % s)
+
+	def clear(self):
+		s = ""
+		for i in range(self.pixels*3):
+			s += "\\x00"
+		self.pipe.write(s)
+
+	def get_blank_buffer(self):
 		blank_buffer = []
 		for i in range(self.pixels*3):
 			blank_buffer.append(0)

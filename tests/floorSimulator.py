@@ -22,7 +22,7 @@ class FloorSimulator(object):
 		self.layout = DisplayLayout(config["modules"])
 		self.dimensions = (height, width) = self.layout.calculate_floor_size()
 		self.size = (height*20, width*20)
-		self.pipe = open(config["system"]["tty"])
+		self.pipe = open(config["system"]["pipe"])
 		lm = self.layout.layout_mapping
 		self.reverse_lm = self.__reverse_mapping__(lm)
 		

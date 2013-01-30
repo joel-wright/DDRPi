@@ -43,4 +43,4 @@ class PluginRegistry(object):
 		return self.__registry__.keys()
 		
 	def get_plugin(self, name):
-		return self.__registry__.[name]
+		return self.__registry__[name]

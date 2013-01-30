@@ -1,7 +1,9 @@
 # Main option config
 system:
   plugin_dir: plugins
-  tty: /tmp/dance_pipe
+  tty: /dev/ttyUSB0
+  debug: True
+  pipe: /tmp/dance_pipe
 
 # Module layout config (we may change this later)
 modules:
@@ -33,16 +35,3 @@ modules:
     y_position: 8
     orientation: S
 
-  5:
-    width: 8
-    height: 6
-    x_position: 16
-    y_position: 0
-    orientation: E
-
-  6:
-    width: 8
-    height: 6
-    x_position: 16
-    y_position: 8
-    orientation: S

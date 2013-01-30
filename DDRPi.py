@@ -6,7 +6,7 @@ import logging
 import pygame
 import sys
 import yaml
-from comms import FloorComms
+from lib.comms import FloorComms
 from lib.layout import DisplayLayout
 from lib.plugins_base import DDRPiPlugin, PluginRegistry
 from pygame.locals import *
@@ -23,22 +23,26 @@ class DanceSurface(object):
 	def __init__(self, config):
 		super(DanceSurface, self).__init__()
 		# Create the floor communication object
-		self.comms = FloorComms(config.["system"].["tty"])
+		if config["system"]["debug"] == False:
+			self.comms = FloorComms(config["system"]["tty"])
+		else:
+			from lib.comms import DebugComms
+			self.comms = DebugComms(config["system"]["pipe"])
 		# Create the layout object and calculate floor size
-		self.layout = DisplayLayout(config.["modules"])
+		self.layout = DisplayLayout(config["modules"])
 		(self.width, self.height) = self.layout.calculate_floor_size()
 		self.total_pixels = self.width * self.height
 		# Initialise all the pixels to black 
 		self.pixels = [ 0 for n in range(0, 3*self.total_pixels) ]
 		
-	def hexToTuple(rgb_tuple):
+	def tupleToHex(self,rgb_tuple):
 		"""
 		Convert an (R, G, B) tuple to hex #RRGGBB
 		"""
 		hex_colour = '#%02x%02x%02x' % rgb_tuple
 		return hex_colour
 
-	def tupleToHex(hex_colour):
+	def hexToTuple(self,hex_colour):
 		"""
 		Convert hex #RRGGBB to an (R, G, B) tuple
 		"""
@@ -59,23 +63,25 @@ class DanceSurface(object):
 		"""
 		self.comms.send_data(self.pixels)
 
-	def clear(self, colour)
+	def clear(self, colour):
 		"""
 		Clear the surface to a single colour
 		"""
 		# Make sure we never send a 1 by mistake and screw up the frames
-		(r,g,b) = [ x if not x == 1 else 0 for x in self.hexToTuple(colour) ]
+		(r,g,b) = [ v if not v == 1 else 0 for v in self.hexToTuple(colour) ]
 		for x in range(0,self.total_pixels):
 			self.pixels[x*3:(x+1)*3] = [r,g,b]
 
-	def draw_pixel(self, x, y, colour)
+	def draw_pixel(self, x, y, colour):
 		"""
 		Set the value of the pixel at (x,y) to colour
 		"""
 		# Make sure we never send a 1 by mistake and screw up the frames
-		(r,g,b) = [ x if not x == 1 else 0 for x in self.hexToTuple(colour) ]
-		mapped_pixel = 3 * self.layout.get_position(x,y)
-		self.pixels[mapped_pixel:mapped_pixel+3] = [r,g,b]
+		(r,g,b) = [ v if not v == 1 else 0 for v in self.hexToTuple(colour) ]
+		pos = self.layout.get_position(x,y)
+		if pos is not None:
+			mapped_pixel = 3 * pos
+			self.pixels[mapped_pixel:mapped_pixel+3] = [r,g,b]
 		
 	# TODO: More drawing primitives:
 	# def draw_line
@@ -161,9 +167,9 @@ class DDRPi(object):
 		"""
 		# TODO: Pick a display plugin from the registry
 		#       (i.e. one of the games or visualisations)
-		available_plugins = __registry__.get_names()
+		available_plugins = self.__registry__.get_names()
 		if len(available_plugins) > 0:
-			self.active_plugin = __registry__.get_plugin(available_plugins[0])
+			self.active_plugin = self.__registry__.get_plugin(available_plugins[0])
 			self.active_plugin.configure(self.config, self.dance_surface)
 			self.active_plugin.start()
 		else:

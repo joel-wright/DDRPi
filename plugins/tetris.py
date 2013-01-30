@@ -82,10 +82,23 @@ class TetrisPlugin(DDRPiPlugin):
 	}
 	
 	# Button mappings
-	buttons = {
+	__buttons__ = {
 		1: lambda: self._rotate(player, 1),
 		2: lambda: self._rotate(player, -1),
 		3: lambda: self._drop(player)
+	}
+	
+	# Colours for the tetrominos
+	__colours__ = {
+		"red"      : (255,0,0),
+		"green"    : (0,255,0),
+		"blue"     : (0,0,255),
+		"cyan"     : (0,255,255),
+		"magenta"  : (255,0,255),
+		"yellow"   : (255,255,0),
+		"black"    : (0,0,0),
+		"white"    : (255,255,255),
+		"dark blue": (0,0,127)
 	}
 	
 	def configure(self, config, image_surface):
@@ -151,7 +164,7 @@ class TetrisPlugin(DDRPiPlugin):
 		# Wait (maybe paused)
 		self.game_state = {
 			'player1': {
-				'blocks' = [],
+				'blocks' = [], # Triples of position and colour
 				'current_tetromino': self._select_tetromino(),
 				'current_tetromino_pos': (self.width/2, -2),
 				'current_orientation': 0,
@@ -172,8 +185,8 @@ class TetrisPlugin(DDRPiPlugin):
 		Randomly select a new piece
 		"""
 		rn = random.randint(0,6)
-		rt = __tetrominos__.keys()[rt]
-		t = __tetrominos__[rt]('N',self.width/2, -2)
+		rt = TetrisPlugin.__tetrominos__.keys()[rt]
+		t = TetrisPlugin.__tetrominos__[rt]('N',self.width/2, -2)
 
 	def _drop(self, player):
 		"""
@@ -206,6 +219,23 @@ class TetrisPlugin(DDRPiPlugin):
 				return False
 		else:
 			return False
+
+	def _legal_move(self, player, pos):
+		"""
+		Test whether the given (new) position for the given player would
+		constitute a valid move.
+		"""
+		(tx,ty) = pos
+		o = self.game_state[player]['current_orientation']
+		block_positions = self.game_state[player]['current_tetromino'](o,tx,ty)
+		current_blocks = self.game_state[player]['blocks']
+		
+		for bp in block_positions:
+			for (x,y,c) in current_blocks
+				if bp == (x,y):
+					return False
+		
+		return True 
 
 	def _rotate(self, player, dir_value):
 		"""
