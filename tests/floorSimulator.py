@@ -70,11 +70,16 @@ class FloorSimulator(object):
 		pixels = []
 		
 		(h,w) = self.dimensions
-		
-		for i in range(0,(h*w)):
-			index = i*3
-			[r,g,b] = line[index:index+3]
-			pixels.append((ord(r),ord(g),ord(b)))
+			
+		index = 0
+		p = 0
+		while p < (h*w):
+			r = line[index:index+6]
+			g = line[index+6:index+12]
+			b = line[index+12:index+18]
+			index += 18
+			p += 1
+			pixels.append((ord(eval(r)),ord(eval(g)),ord(eval(b))))
 			
 		return pixels
 		

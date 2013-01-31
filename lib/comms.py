@@ -54,9 +54,9 @@ class DebugComms(object):
 		for i in data_buffer:
 			v = hex(i)[2:]
 			if len(v) < 2:
-				s += "\\x0%s" % v
+				s += "'\\x0%s'" % v
 			else:
-				s += "\\x0%s" % v
+				s += "'\\x%s'" % v
 		self.pipe.write("%s\n" % s)
 
 	def clear(self):
