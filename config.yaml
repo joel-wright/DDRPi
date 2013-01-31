@@ -24,13 +24,48 @@ modules:
   3:
     width: 8
     height: 6
-    x_position: 8
-    y_position: 0
-    orientation: E
+    x_position: 0
+    y_position: 12
+    orientation: N
 
   4:
     width: 8
     height: 6
     x_position: 8
-    y_position: 8
-    orientation: S
+    y_position: 0
+    orientation: N
+    
+  5:
+    width: 8
+    height: 6
+    x_position: 8
+    y_position: 6
+    orientation: N
+    
+  6:
+    width: 8
+    height: 6
+    x_position: 8
+    y_position: 12
+    orientation: N
+    
+  7:
+    width: 8
+    height: 6
+    x_position: 16
+    y_position: 0
+    orientation: N
+    
+  8:
+    width: 8
+    height: 6
+    x_position: 16
+    y_position: 6
+    orientation: N
+    
+  9:
+    width: 8
+    height: 6
+    x_position: 16
+    y_position: 12
+    orientation: N
