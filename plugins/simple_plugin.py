@@ -51,8 +51,7 @@ class SimplePlugin(DDRPiPlugin):
 				r = random.randint(0,255)
 				g = random.randint(0,255)
 				b = random.randint(0,255)
-				c = self.ddrpi_surface.tupleToHex((r,g,b))
-				self.ddrpi_surface.draw_pixel(x,y,c)
+				self.ddrpi_surface.draw_tuple_pixel(x,y,(r,g,b))
 
 		# Limit the frame rate
 		self.clock.tick(40)

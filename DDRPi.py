@@ -72,12 +72,23 @@ class DanceSurface(object):
 		for x in range(0,self.total_pixels):
 			self.pixels[x*3:(x+1)*3] = [r,g,b]
 
-	def draw_pixel(self, x, y, colour):
+	def draw_hex_pixel(self, x, y, colour):
 		"""
-		Set the value of the pixel at (x,y) to colour
+		Set the value of the pixel at (x,y) to colour(#RRGGBB")
 		"""
 		# Make sure we never send a 1 by mistake and screw up the frames
 		(r,g,b) = [ v if not v == 1 else 0 for v in self.hexToTuple(colour) ]
+		pos = self.layout.get_position(x,y)
+		if pos is not None:
+			mapped_pixel = 3 * pos
+			self.pixels[mapped_pixel:mapped_pixel+3] = [r,g,b]
+	
+	def draw_tuple_pixel(self, x, y, colour):
+		"""
+		Set the value of the pixel at (x,y) to colour((r,g,b))
+		"""
+		# Make sure we never send a 1 by mistake and screw up the frames
+		(r,g,b) = [ v if not v == 1 else 0 for v in colour ]
 		pos = self.layout.get_position(x,y)
 		if pos is not None:
 			mapped_pixel = 3 * pos
