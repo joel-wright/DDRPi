@@ -2,6 +2,7 @@ __authors__ = ['Joel Wright']
 
 import random
 import time
+import pygame
 
 from DDRPi import DDRPiPlugin
 
@@ -13,6 +14,7 @@ class SimplePlugin(DDRPiPlugin):
 		"""
 		self.ddrpi_config = config
 		self.ddrpi_surface = image_surface
+		self.clock = pygame.time.Clock()
 
 	def __name__(self):
 		return 'Simple Plugin'
@@ -52,5 +54,6 @@ class SimplePlugin(DDRPiPlugin):
 				c = self.ddrpi_surface.tupleToHex((r,g,b))
 				self.ddrpi_surface.draw_pixel(x,y,c)
 
-		time.sleep(0.05)
+		# Limit the frame rate
+		self.clock.tick(40)
 		self.ddrpi_surface.blit()

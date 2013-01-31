@@ -28,6 +28,7 @@ class FloorSimulator(object):
 		
 	def start(self):
 		pygame.init()
+		clock = pygame.time.Clock()
 		self.screen = pygame.display.set_mode(self.size)
 		background = pygame.Surface(self.screen.get_size())
 		self.background = background.convert()
@@ -41,7 +42,8 @@ class FloorSimulator(object):
 			while not line_read:
 				line = self.pipe.readline()
 				if len(line) == 0:
-					time.sleep(0.05)
+					# Limit the frame rate
+					clock.tick(40)
 					# Need to grab the pygame event list and clear it to avoid
 					# lockups (we'll also update the display to handle desktop
 					# changes)
