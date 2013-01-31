@@ -52,7 +52,7 @@ class DebugComms(object):
 	def send_data(self,data_buffer):
 		s = ""
 		for i in data_buffer:
-			v = hex(i)
+			v = hex(i)[2:]
 			if len(v) < 2:
 				s += "\\x0%s" % v
 			else:
