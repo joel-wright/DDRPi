@@ -42,9 +42,7 @@ class FloorSimulator(object):
 			while not line_read:
 				line = self.pipe.readline()
 				if len(line) == 0:
-					# Limit the frame rate
-					clock.tick(40)
-					# Need to grab the pygame event list and clear it to avoid
+										# Need to grab the pygame event list and clear it to avoid
 					# lockups (we'll also update the display to handle desktop
 					# changes)
 					events = pygame.event.get()
@@ -64,6 +62,9 @@ class FloorSimulator(object):
 			
 			# Reset and start looking for input again
 			line_read = False
+			
+			# Limit the frame rate
+			clock.tick(20)
 			
 	def __build_pixel_list__(self, line):
 		pixels = []
