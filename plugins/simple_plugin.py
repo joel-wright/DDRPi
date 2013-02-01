@@ -7,6 +7,7 @@ import pygame
 from DDRPi import DDRPiPlugin
 
 class SimplePlugin(DDRPiPlugin):
+	
 	def configure(self, config, image_surface):
 		"""
 		This is an example of an end user module - need to make sure we can get
@@ -15,9 +16,6 @@ class SimplePlugin(DDRPiPlugin):
 		self.ddrpi_config = config
 		self.ddrpi_surface = image_surface
 		self.clock = pygame.time.Clock()
-
-	def __name__(self):
-		return 'Simple Plugin'
 
 	def start(self):
 		"""

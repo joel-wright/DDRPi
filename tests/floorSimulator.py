@@ -41,6 +41,7 @@ class FloorSimulator(object):
 			
 			while not line_read:
 				line = self.pipe.readline()
+
 				if len(line) == 0:
 										# Need to grab the pygame event list and clear it to avoid
 					# lockups (we'll also update the display to handle desktop

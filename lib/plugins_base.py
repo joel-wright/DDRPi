@@ -1,6 +1,12 @@
 __authors__ = ['Joel Wright','Mark McArdle']
 
 class DDRPiPlugin(object):
+	def name(self):
+		"""
+		Name to register the plugin in the registry
+		"""
+		raise NotImplementedError
+	
 	def configure(self):
 		"""
 		Called to configure the plugin before we start it.
