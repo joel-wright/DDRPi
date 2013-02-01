@@ -125,6 +125,15 @@ class DDRPi(object):
 		# Initialise pygame
 		pygame.init()
 
+		# See how many joypads there are
+		print("Joypads: %d" % (pygame.joystick.get_count()))
+
+		# Init the joysticks
+		for i in range(pygame.joystick.get_count()):
+	        	joystick = pygame.joystick.Joystick(i);
+			print("Initialising joypad %d - %s" % (i, joystick.get_name()))
+		        joystick.init()
+
 	def __load_config(self):
 		"""
 		Load the config file into a dictionary.
