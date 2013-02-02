@@ -28,13 +28,13 @@ class FloorComms(object):
 
 	def send_data(self,data_buffer):
 		for i in data_buffer:
-			self.ser.write(chr(i%256))
-		self.ser.write(chr(1))
+			self.s_port.write(chr(i%256))
+		self.s_port.write(chr(1))
 
 	def clear(self):  
 		for i in range(self.pixels*3):
-			self.ser.write(chr(0))
-		self.ser.write(chr(1))
+			self.s_port.write(chr(0))
+		self.s_port.write(chr(1))
 
 	def get_blank_buffer(self):
 		blank_buffer = []
@@ -58,6 +58,7 @@ class DebugComms(object):
 			else:
 				s += "'\\x%s'" % v
 		self.pipe.write("%s\n" % s)
+		self.pipe.flush()
 
 	def clear(self):
 		s = ""
