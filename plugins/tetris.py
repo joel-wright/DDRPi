@@ -137,8 +137,8 @@ class TetrisPlugin(DDRPiPlugin):
 		Stop writing to the surface and clean up
 		"""
 		# Stop recurring events
+		pygame.time.set_timer(USEREVENT+0,0)
 		pygame.time.set_timer(USEREVENT+1,0)
-		pygame.time.set_timer(USEREVENT+2,0)
 		
 	def handle(self, event):
 		"""
@@ -190,6 +190,7 @@ class TetrisPlugin(DDRPiPlugin):
 				'current_tetromino_pos': None,
 				'current_orientation': None,
 				'rows_removed': 0,
+				'penalty_rows_created': 0,
 				'drop_timer': 1000
 			},
 			'player2': {
@@ -199,6 +200,7 @@ class TetrisPlugin(DDRPiPlugin):
 				'current_tetromino_pos': None,
 				'current_orientation': None,
 				'rows_removed': 0,
+				'penalty_rows_created': 0,
 				'drop_timer': 1000
 			},
 			'paused': True
@@ -216,7 +218,7 @@ class TetrisPlugin(DDRPiPlugin):
 		
 		self.game_state[player]['current_tetromino'] = t
 		self.game_state[player]['current_tetromino_shape'] = rt
-		self.game_state[player]['current_tetromino_pos'] = (self.width/2, -2)
+		self.game_state[player]['current_tetromino_pos'] = (self.game_width/2, -2)
 		self.game_state[player]['current_orientation'] = 0
 
 	def _drop(self, player):
@@ -247,6 +249,7 @@ class TetrisPlugin(DDRPiPlugin):
 				return False
 			elif self._tetromino_has_landed(player, np):
 				self._add_fixed_blocks(player, (cx,cy))
+				self._add_penalty_rows(player)
 				self._select_tetromino(player)
 				return True
 			else:
@@ -341,7 +344,7 @@ class TetrisPlugin(DDRPiPlugin):
 					
 					if by < y:
 						fixed_blocks.remove(((bx,by),bc))
-						fixed_blocks.insert(0,((bx,by+1),bc))
+						fixed_blocks.append(((bx,by+1),bc))
 					
 				self.game_state[player]['blocks'] = fixed_blocks
 			
@@ -349,15 +352,14 @@ class TetrisPlugin(DDRPiPlugin):
 		
 		# Add rows removed to the other player (4=4, otherwise n-1)
 		if rows_removed < 4:
-			rows_to_add = rows_removed - 1
-			if rows_to_add < 1:
-				rows_to_add = 0
+			penalty = rows_removed - 1
+			if penalty < 1:
+				penalty = 0
 		else:
-			rows_to_add = 4
+			penalty = 4
 			
-		if not rows_to_add == 0:
-			from_player = player
-			self._add_punishment_rows(from_player, rows_to_add)
+		if not penalty == 0:
+			self.game_state[player]['penalty_rows_created'] = penalty
 		
 	def _add_fixed_blocks(self, player, pos):
 		"""
@@ -371,11 +373,31 @@ class TetrisPlugin(DDRPiPlugin):
 		coloured_blocks_to_add = map((lambda p: (p,c)),positions_to_add)
 		self.game_state[player]['blocks'] += coloured_blocks_to_add
 
-	def _add_punishment_rows(self, from_player, number):
+	def _add_penalty_rows(self, player, number):
 		"""
-		Add the given number of punishment rows from the given player to the other
+		Add the given number of punishment rows to the given player
 		"""
-		# TODO
+		# Get the number of penalty rows from the other player
+		players = TetrisPlugin.__player__.values()
+		[op] = filter(lambda x: not x == player, players)
+		rows_to_add = self.game_state[op]['penalty_rows_created']
+		self.game_state[op]['penalty_rows_created'] = 0
+		
+		# Get a random hole position and the y position for the rows to be added
+		hole_pos = random.randint(0, self.game_width)
+		row_y = min([y for ((x,y),c) in self.game_state[player]['blocks']])
+		
+		# Create the positions to be added
+		new_positions = []
+		colours = TetrisPlugin.__colours__
+		col = colours[colours.keys()[random.randint(0,len(colours)-1)]]
+		for y in range(row_y - rows_to_add, row_y):
+			for x in range(0,self.game_width):
+				if not x == hole_pos:
+					new_positions.append(((x,y),col))
+					
+		# Add the new positions to the player's game state
+		self.game_state[player]['blocks'] += new_positions
 
 	def _draw_state(self):
 		"""
@@ -383,4 +405,8 @@ class TetrisPlugin(DDRPiPlugin):
 		This also handles the positioning of the 2 player game areas and
 		background.
 		"""
-		# TODO
+		self.ddrpi_surface.clear_tuple(TetrisPlugin.__colours__['fill'])
+		# Get the offset for each game state
+		# Map the offsets to the game states
+		# Draw black background to game states
+		# Draw the coloured blocks

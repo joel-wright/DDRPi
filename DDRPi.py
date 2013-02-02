@@ -69,12 +69,21 @@ class DanceSurface(object):
 		"""
 		self.comms.send_data(self.pixels)
 
-	def clear(self, colour):
+	def clear_hex(self, colour):
 		"""
 		Clear the surface to a single colour
 		"""
 		# Make sure we never send a 1 by mistake and screw up the frames
 		(r,g,b) = [ v if not v == 1 else 0 for v in self.hexToTuple(colour) ]
+		for x in range(0,self.total_pixels):
+			self.pixels[x*3:(x+1)*3] = [r,g,b]
+			
+	def clear_tuple(self, colour):
+		"""
+		Clear the surface to a single colour
+		"""
+		# Make sure we never send a 1 by mistake and screw up the frames
+		(r,g,b) = [ v if not v == 1 else 0 for v in colour ]
 		for x in range(0,self.total_pixels):
 			self.pixels[x*3:(x+1)*3] = [r,g,b]
 
@@ -99,6 +108,16 @@ class DanceSurface(object):
 		if pos is not None:
 			mapped_pixel = 3 * pos
 			self.pixels[mapped_pixel:mapped_pixel+3] = [r,g,b]
+			
+	def draw_tuple_box(self, top_left, bottom_right, colour):
+		"""
+		Fill the box from top left to bottom right with the given colour
+		"""
+		(tlx,tly) = top_left
+		(brx,bry) = bottom_right
+		for y in range(tly,bry+1):
+			for x in range(tlx,brx+1):
+				self.draw_tuple_pixel(x, y, colour)
 		
 	# TODO: More drawing primitives:
 	# def draw_line
