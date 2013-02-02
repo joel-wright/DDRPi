@@ -3,6 +3,7 @@ __authors__ = ['Joel Wright']
 import logging
 import pygame
 import pygame.time
+import random
 from DDRPi import DDRPiPlugin
 from pygame.locals import *
 
@@ -118,8 +119,7 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		self.ddrpi_config = config
 		self.ddrpi_surface = image_surface
-		(self.game_width, self.game_height, self.display_multiply_factor) =
-			self._get_game_dimensions()		
+		(self.game_width, self.game_height, self.display_multiply_factor) = self._get_game_dimensions()		
 		self._reset()
 		
 	def start(self):
@@ -177,7 +177,7 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		Write the updated tetris board states to the dance surface and blit
 		"""
-		self.__draw_state__()
+		self._draw_state()
 		self.ddrpi_surface.blit()
 
 	def _reset(self):
@@ -213,7 +213,7 @@ class TetrisPlugin(DDRPiPlugin):
 		Randomly select a new piece
 		"""
 		rn = random.randint(0,6)
-		rt = TetrisPlugin.__tetrominos__.keys()[rt]
+		rt = TetrisPlugin.__tetrominos__.keys()[rn]
 		t = TetrisPlugin.__tetrominos__[rt]
 		
 		self.game_state[player]['current_tetromino'] = t
@@ -304,6 +304,8 @@ class TetrisPlugin(DDRPiPlugin):
 			max_width = (w-3)/2
 			if max_width < 8:
 				logging.error("Not enough width!")
+		else:
+			max_width = 10
 		if extra_space < 1:
 			logging.error("Not enough padding")
 		
@@ -314,6 +316,8 @@ class TetrisPlugin(DDRPiPlugin):
 			max_height = h - 2
 			if max_height < 16:
 				logging.error("Not enough height!")
+		else:
+			max_height = 20
 		
 		return(max_width, max_height, min(game_width_factor, game_height_factor))
 
@@ -410,3 +414,18 @@ class TetrisPlugin(DDRPiPlugin):
 		# Map the offsets to the game states
 		# Draw black background to game states
 		# Draw the coloured blocks
+		
+	def display_preview(self):
+		"""
+		Construct a splash screen suitable to display for a plugin selection menu
+		"""
+		self.ddrpi_surface.clear_tuple((63,0,0))
+		self.ddrpi_surface.blit()
+		
+	def pause(self):
+		"""
+		Pauses the plugin - e.g. saves a game state when we enter menu mode.
+		"""
+		# Does nothing for now - we could just block events in MENU mode
+		return None
+		

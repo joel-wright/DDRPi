@@ -7,7 +7,7 @@ from datetime import datetime
 
 from DDRPi import DDRPiPlugin
 
-class SimplePlugin(DDRPiPlugin):
+class ColourTestPlugin(DDRPiPlugin):
 
 	# Colours
 	__colours__ = {
@@ -194,20 +194,19 @@ class SimplePlugin(DDRPiPlugin):
 		# Rate limit it
 		self.clock.tick(100)
 
-	def display_preview(self, config, image_surface):
+	def display_preview(self):
 		"""
 		Construct a splash screen suitable to display for a plugin selection menu
 		"""
-		w = image_surface.width
-		h = image_surface.height
+		w = self.ddrpi_surface.width
+		h = self.ddrpi_surface.height
 		
 		for x in range(0,w):
 			for y in range(0,h):
-				image_surface.draw_tuple_pixel(x,y, (0,0,0))
+				self.ddrpi_surface.draw_tuple_pixel(x,y, (0,0,0))
 
 		# Draw our little pixel man over the top
-		image_surface.draw_tuple_pixel(0,0, (255,255,0))
-
-		image_surface.blit()
+		self.ddrpi_surface.draw_tuple_pixel(0,0, (255,255,0))
+		self.ddrpi_surface.blit()
 
 		

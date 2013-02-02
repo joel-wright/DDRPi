@@ -1,4 +1,4 @@
-__authors__ = ['Joel Wright','Mark McArdle']
+__authors__ = ['Joel Wright','Mark McArdle','Andrew Taylor']
 
 import importlib
 import os
@@ -128,7 +128,7 @@ class DanceSurface(object):
 class DDRPi(object):
 	"""
 	The Main class - should load plugins and manage access to the DanceSurface object
-	"""
+	"""	
 	def __init__(self):
 		"""
 		Initialise the DDRPi Controller app.
@@ -140,13 +140,13 @@ class DDRPi(object):
 		# Load the application config
 		self.config = self.__load_config__()
 
+		# Create the dance floor surface
+		self.dance_surface = DanceSurface(self.config)
+		
 		# Set up plugin registry
 		self.__registry__ = PluginRegistry()
 		self.__register_plugins(self.config["system"]["plugin_dir"])
 
-		# Create the dance floor surface
-		self.dance_surface = DanceSurface(self.config)
-		
 		# Initialise pygame
 		pygame.init()
 		
@@ -184,6 +184,7 @@ class DDRPi(object):
 				name = plugin.__name__
 				print("name: %s" % name)
 				pinst = plugin()
+				pinst.configure(self.config, self.dance_surface)
 				self.__registry__.register(name, pinst)
 
 	def __init_controllers__(self):
@@ -222,6 +223,7 @@ class DDRPi(object):
 		#       (i.e. one of the games or visualisations)
 		available_plugins = self.__registry__.get_names()
 		if len(available_plugins) > 0:
+			self.plugin_index = 0
 			self.active_plugin = self.__registry__.get_plugin(available_plugins[0])
 			self.active_plugin.configure(self.config, self.dance_surface)
 			self.active_plugin.start()
@@ -229,6 +231,10 @@ class DDRPi(object):
 			logging.error("No display plugins found")
 			sys.exit(1)
 			
+		# Start the application in Menu mode
+		self.plugin_index = 0
+		self.temporary_plugin_index = 0
+		self.mode = "MENU"
 		self._main_loop()
 	
 	def _main_loop(self):	
@@ -241,7 +247,9 @@ class DDRPi(object):
 			while(True):
 				for e in pygame.event.get():
 					# handle special events (e.g. plugin switch)
-					
+					bypass = self._handle(e)
+					if bypass:
+						continue
 					# TODO: decide whether to ONLY pass gamepad events to plugins...
 					
 					# active plugin handle e
@@ -250,10 +258,79 @@ class DDRPi(object):
 				
 				# Update the display
 				# We're just going as fast as the serial port will let us atm
-				self.active_plugin.update_surface()
+				if self.mode == "RUNNING":
+					self.active_plugin.update_surface()
 		except IOError as io_e:
 			logging.error("The floor simulator was closed")
 			exit(1)
+			
+	def _preview_plugin(self, plugin_name):
+		logging.debug("DDRPi: Switching to preview plugin %s" % plugin_name)
+		preview_plugin = self.__registry__.get_plugin(plugin_name)
+		preview_plugin.display_preview()		
+			
+	def _handle(self, e):
+		"""
+		Handle events for controlling the main application
+		
+		returns: Boolean - does this event bypass the running/paused plugin
+		"""
+		if pygame.event.event_name(e.type) == "JoyButtonDown":
+			if self.mode == "RUNNING":
+				# 2 = B, 8 = SELECT, cancel, go back to running
+                                if e.button == 8:
+					logging.debug("DDRPi: Entering menu")
+					self.mode = "MENU"
+					self.active_plugin.pause()
+					return True
+
+			if self.mode == "MENU":
+				# 2 = B, 8 = SELECT, cancel, go back to running
+				if (e.button == 2 or e.button == 8):
+					logging.debug("DDRPi: Exiting menu")
+					self.mode = "RUNNING"
+					self.active_plugin.resume()
+					return True
+
+				# 1 = A, 9 = START, accept, start this plugin
+				if (e.button == 1 or e.button == 9):
+					available_plugins = self.__registry__.get_names()
+					logging.debug("DDRPi: Selected plugin")
+					self.mode = "RUNNING"
+					self.active_plugin = self.__registry__.get_plugin(available_plugins[self.temporary_plugin_index])
+					self.active_plugin.configure(self.config, self.dance_surface)
+					self.active_plugin.start()
+					self.plugin_index = self.temporary_plugin_index
+					return True
+					
+				# 4 = LB, scroll left
+				if (e.button == 4):
+					available_plugins = self.__registry__.get_names()
+					self.temporary_plugin_index = (self.temporary_plugin_index + 1) % len(available_plugins)
+					self._preview_plugin(available_plugins[self.temporary_plugin_index])
+					logging.debug("DDRPi: Switching to preview plugin %d/%d" % (self.temporary_plugin_index+1, len(available_plugins)))
+					return True
+				
+				# 5 = RB, scroll right
+				if (e.button == 5):
+					available_plugins = self.__registry__.get_names()
+					self.temporary_plugin_index = (self.temporary_plugin_index - 1) % len(available_plugins)
+					self._preview_plugin(available_plugins[self.temporary_plugin_index])
+					logging.debug("DDRPi: Switching to preview plugin %d/%d" % (self.temporary_plugin_index+1, len(available_plugins)))
+					return True
+					
+				# 8 = SELECT, go into menu mode, pausing the current plugin
+				if (e.button == 8):
+					available_plugins = self.__registry__.get_names()
+					logging.debug("DDRPi: Entering menu, %d plugins available" % len(available_plugins))
+					self.mode = "MENU"
+					if (self.active_plugin != None):
+						# We'll need this to pause the game
+						self.active_plugin.pause()
+						self.active_plugin.display_preview(self.config, self.dance_surface)
+					self.temporary_plugin_index = self.plugin_index
+		
+		return False
 
 # Start the dance floor application
 if __name__ == "__main__":

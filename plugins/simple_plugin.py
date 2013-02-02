@@ -37,6 +37,12 @@ class SimplePlugin(DDRPiPlugin):
 		"""
 		return None
 		
+	def pause(self):
+		"""
+		Pauses the plugin - e.g. saves a game state when we enter menu mode.
+		"""
+		return None
+		
 	def update_surface(self):
 		"""
 		Write the updated plugin state to the dance surface and blit
@@ -54,3 +60,9 @@ class SimplePlugin(DDRPiPlugin):
 		# Limit the frame rate
 		self.clock.tick(40)
 		self.ddrpi_surface.blit()
+		
+	def display_preview(self):
+		"""
+		Construct a splash screen suitable to display for a plugin selection menu
+		"""
+		self.update_surface()

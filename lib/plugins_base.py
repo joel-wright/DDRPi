@@ -25,6 +25,18 @@ class DDRPiPlugin(object):
 		"""
 		raise NotImplementedError
 		
+	def pause(self):
+		"""
+		Pauses the plugin - e.g. saves a game state when we enter menu mode.
+		"""
+		raise NotImplementedError
+		
+	def display_preview(self):
+		"""
+		Construct a splash screen suitable to display for a plugin selection menu
+		"""
+		raise NotImplementedError
+		
 	def handle(self, event):
 		"""
 		Handle any pygame events sent to the plugin from the main loop
