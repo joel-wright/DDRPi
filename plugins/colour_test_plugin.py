@@ -1,8 +1,9 @@
 __authors__ = ['Andrew Taylor']
 
+import logging
+import pygame
 import random
 import time
-import pygame
 from datetime import datetime
 
 from DDRPi import DDRPiPlugin
@@ -34,25 +35,6 @@ class ColourTestPlugin(DDRPiPlugin):
 		8	: "SELECT",
 		9	: "START"
 	}
-
-#	__pad_controls__ = {
-#		# Type
-#		"JoyButton"	: {
-#					# Button  {Down event, repeats}
-#					0	: {"last_pressed": -1, "repeats": 0},
-#					1	: {"last_pressed": -1, "repeats": 0},
-#					2	: {"last_pressed": -1, "repeats": 0},
-#					3	: {"last_pressed": -1, "repeats": 0},
-#					4	: {"last_pressed": -1, "repeats": 0},
-#					5	: {"last_pressed": -1, "repeats": 0},
-#					8	: {"last_pressed": -1, "repeats": 0},
-#					9	: {"last_pressed": -1, "repeats": 0},
-#				},
-#		"JoyAxis"	: {
-#					0	: 0,
-#					1	: 0
-#				}		
-#	}
 
 	changed = 1
 	position = {"x": 0, "y": 0}
@@ -102,17 +84,15 @@ class ColourTestPlugin(DDRPiPlugin):
 		"""
 		Handle the pygame event sent to the plugin from the main loop
 		"""
-		print event
-		print pygame.event.event_name(event.type)
-
+		logging.debug("ColourTestPlugin: %s" % event)
+		
 		joypad = action = action_value = event_name = None
 		
 		try:
 			event_name_temp = pygame.event.event_name(event.type)
 
 			if (event_name_temp == "JoyButtonDown"):
-				self.__pad_controls__["JoyButton"][event.button] = datetime.now()
-				button = self.__buttons__[event.button]
+				button = ColourTestPlugin.__buttons__[event.button]
 				if (button != None):
 					if (button == "A"):
 						self.colour = self.__colours__["red"]
@@ -123,13 +103,6 @@ class ColourTestPlugin(DDRPiPlugin):
 					if (button == "Y"):
 						self.colour = self.__colours__["green"]
 				self.post_invalidate()	
-
-#			if (event_name_temp == "JoyButtonUp"):
-#				if (self.__pad_controls__["JoyButton"][event.button]["last_pressed"] != -1):
-#					duration_down = datetime.now() - self.__pad_controls__["JoyButton"][event.button]["last_pressed"]
-#					self.__pad_controls__["JoyButton"][event.button]["last_pressed"] = -1
-#					ms_down = duration_down.seconds * 1000 + duration_down.microseconds / 1000
-#					print ("Button %d down for %d ms" % (event.button, ms_down))
 
 			if (event_name_temp == "JoyAxisMotion"):
 				if (event.axis == 0):
@@ -157,7 +130,7 @@ class ColourTestPlugin(DDRPiPlugin):
 				pass
 
 		except Exception as ex:
-			print ex
+			logging.error("ColourTestPlugin: %s" % ex)
 
 		return None
 		
@@ -165,18 +138,9 @@ class ColourTestPlugin(DDRPiPlugin):
 		"""
 		Write the updated plugin state to the dance surface and blit
 		"""
-
-#		for key in self.__pad_controls__["JoyButton"]:
-#			print("Key - %s" % key)
-#			if (self.__pad_controls__["JoyButton"][key]["last_pressed"] != -1):
-#				print self.__pad_controls__["JoyButton"][key]["last_pressed"]
-#				duration_down = datetime.now() - self.__pad_controls__["JoyButton"][key]["last_pressed"]
-#				ms_down = duration_down.seconds * 1000 + duration_down.microseconds / 1000
-#				print ("Button %d down for %d ms" % (key, ms_down))
-
 		if (self.changed == 1):
 
-			print self.colour
+			logging.debug("ColourTestPlugin: %s" % self.colour)
 			w = self.ddrpi_surface.width
 			h = self.ddrpi_surface.height
 			

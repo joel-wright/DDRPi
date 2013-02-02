@@ -115,8 +115,8 @@ class DanceSurface(object):
 		"""
 		(tlx,tly) = top_left
 		(brx,bry) = bottom_right
-		for y in range(tly,bry+1):
-			for x in range(tlx,brx+1):
+		for y in range(tly,bry):
+			for x in range(tlx,brx):
 				self.draw_tuple_pixel(x, y, colour)
 		
 	# TODO: More drawing primitives:
@@ -225,8 +225,6 @@ class DDRPi(object):
 		if len(available_plugins) > 0:
 			self.plugin_index = 0
 			self.active_plugin = self.__registry__.get_plugin(available_plugins[0])
-			self.active_plugin.configure(self.config, self.dance_surface)
-			self.active_plugin.start()
 		else:
 			logging.error("No display plugins found")
 			sys.exit(1)
@@ -235,6 +233,7 @@ class DDRPi(object):
 		self.plugin_index = 0
 		self.temporary_plugin_index = 0
 		self.mode = "MENU"
+		self.active_plugin.display_preview()
 		self._main_loop()
 	
 	def _main_loop(self):	
@@ -297,6 +296,7 @@ class DDRPi(object):
 					available_plugins = self.__registry__.get_names()
 					logging.debug("DDRPi: Selected plugin")
 					self.mode = "RUNNING"
+					self.active_plugin.stop()
 					self.active_plugin = self.__registry__.get_plugin(available_plugins[self.temporary_plugin_index])
 					self.active_plugin.configure(self.config, self.dance_surface)
 					self.active_plugin.start()

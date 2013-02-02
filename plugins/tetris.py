@@ -7,6 +7,9 @@ import random
 from DDRPi import DDRPiPlugin
 from pygame.locals import *
 
+logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
+
 class TetrisPlugin(DDRPiPlugin):
 	
 	# Static maps to define the shape and rotation of tetrominos
@@ -120,6 +123,11 @@ class TetrisPlugin(DDRPiPlugin):
 		self.ddrpi_config = config
 		self.ddrpi_surface = image_surface
 		(self.game_width, self.game_height, self.display_multiply_factor) = self._get_game_dimensions()		
+		y_offset = (self.ddrpi_surface.height - self.game_height) / 2
+		p1_x_offset = (self.ddrpi_surface.width - self.game_width*2) / 3
+		p2_x_offset = (self.ddrpi_surface.width - self.game_width - p1_x_offset)
+		self.p1_display_offset = (p1_x_offset,y_offset)
+		self.p2_display_offset = (p2_x_offset,y_offset)
 		self._reset()
 		
 	def start(self):
@@ -128,9 +136,9 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		# Setup recurring events
 		p1_speed = self.game_state['player1']['drop_timer']
-		pygame.time.set_timer(USEREVENT+1,p1_speed)
+		pygame.time.set_timer(USEREVENT+0,p1_speed)
 		p2_speed = self.game_state['player2']['drop_timer']
-		pygame.time.set_timer(USEREVENT+2,p2_speed)
+		pygame.time.set_timer(USEREVENT+1,p2_speed)
 
 	def stop(self):
 		"""
@@ -146,32 +154,40 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		# Update the boards according to the event
 		# No repeating events; you wanna move twice, push it twice
-		try:
-			(joypad, action, action_value) = {
-				"JoyButtonDown": (e.joy, "Button", e.button),
-				"JoyAxisMotion": (e.joy, "Axis",
-				                   TetrisPlugin.__direction__[e.axis][int(e.value)])
-			}[pygame.events.event_name(event.type)]
-		except Exception as ex:
-			# If we got an exception then we were asked to handle something
-			# that wasn't a joypad button press - ignore it
-			logging.debug("Tetris plugin tried to process a non-joypad event")
-		
-		if action == "Button":
+		if pygame.event.event_name(event.type) == "JoyButtonDown":
 			# Handle the button
-			if action_value in TetrisPlugin.__buttons__:
+			joypad = event.joy
+			button = event.button
+			if button in TetrisPlugin.__buttons__:
 				player = TetrisPlugin.__player__[joypad]
-				TetrisPlugin.__buttons__[action_value](player)
+				TetrisPlugin.__buttons__[button](player)
 			else:
 				logging.debug("Tetris Plugin: Button %s does nothing" % action_value)
-		elif action == "Axis":
+		elif pygame.event.event_name(event.type) == "JoyAxisMotion":
 			# Handle the move
+			joypad = event.joy
 			player = TetrisPlugin.__player__[joypad]
-			landed = self._move(player, action_value)
+			delta_axis = TetrisPlugin.__delta__.get(event.axis,None)
+			if delta_axis is not None:
+				delta = delta_axis.get(int(event.value),None)
+				if delta is not None:
+					landed = self._move(player, delta)
+					if landed:
+						self._add_fixed_blocks(player, (cx,cy))
+						self._remove_rows(player)
+						self._add_penalty_rows(player)
+						self._select_tetromino(player)
+						# TODO: Check if the game has ended
+		elif pygame.event.event_name(event.type) == "UserEvent":
+			player_number = event.type - 24
+			player = TetrisPlugin.__player__[player_number]
+			landed = self._move(player,(0,1))
 			if landed:
+				self._add_fixed_blocks(player, (cx,cy))
 				self._remove_rows(player)
-		else:
-			logging.error("Somehow an action was neither a button nor a direction") 
+				self._add_penalty_rows(player)
+				self._select_tetromino(player)
+				# TODO: Check if the game has ended
 		
 	def update_surface(self):
 		"""
@@ -240,7 +256,7 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		if delta is not None:
 			(dx,dy) = delta
-			o = self.game_state[player]['current_orientation']
+			o = TetrisPlugin.__orientations__[self.game_state[player]['current_orientation']]
 			(cx,cy) = self.game_state[player]['current_tetromino_pos']
 			np = (cx+dx,cy+dy)
 			
@@ -248,15 +264,21 @@ class TetrisPlugin(DDRPiPlugin):
 				self.game_state[player]['current_tetromino_pos'] = np
 				return False
 			elif self._tetromino_has_landed(player, np):
-				self._add_fixed_blocks(player, (cx,cy))
-				self._add_penalty_rows(player)
-				self._select_tetromino(player)
 				return True
 			else:
 				# No move possible, but only left/right, so ignore the request
 				return False
 		else:
 			return False
+			
+	def _tetromino_has_landed(self, player, new_position):
+		"""
+		Test whether the current player's tetromino has landed by checking whether
+		the given new_position overlaps with any fixed blocks
+		
+		returns True if the block has landed
+		"""
+		# TODO
 
 	def _legal_move(self, player, orient, pos):
 		"""
@@ -410,16 +432,61 @@ class TetrisPlugin(DDRPiPlugin):
 		background.
 		"""
 		self.ddrpi_surface.clear_tuple(TetrisPlugin.__colours__['fill'])
-		# Get the offset for each game state
-		# Map the offsets to the game states
-		# Draw black background to game states
-		# Draw the coloured blocks
 		
+		# Draw black background to game states
+		(p1xtl,p1ytl) = p1tl = self.p1_display_offset
+		p1br = (p1xtl+self.game_width,p1ytl+self.game_height)
+		self.ddrpi_surface.draw_tuple_box(p1tl,p1br,(0,0,0))
+		(p2xtl,p2ytl) = p2tl = self.p2_display_offset
+		p2br = (p2xtl+self.game_width,p2ytl+self.game_height)
+		self.ddrpi_surface.draw_tuple_box(p2tl,p2br,(0,0,0))
+		
+		# Draw the fixed blocks
+		p1_blocks = self.game_state['player1']['blocks']
+		p1_blocks = map(lambda ((x,y),c): ((x+p1xtl,y+p1ytl),c), p1_blocks)
+		p2_blocks = self.game_state['player2']['blocks']
+		p2_blocks = map(lambda ((x,y),c): ((x+p2xtl,y+p2ytl),c), p2_blocks)
+		
+		# Draw the current tetrominos
+		(p1_x,p1_y) = self.game_state['player1']['current_tetromino_pos']
+		p1_o = TetrisPlugin.__orientations__[self.game_state['player1']['current_orientation']]
+		(p2_x,p2_y) = self.game_state['player2']['current_tetromino_pos']
+		p2_o = TetrisPlugin.__orientations__[self.game_state['player2']['current_orientation']]
+		
+		p1_shape = self.game_state['player1']['current_tetromino'](p1_o,p1_x,p1_y)
+		p1_shape_name = self.game_state['player1']['current_tetromino_shape']
+		p1_shape_blocks = map(lambda x: (x,TetrisPlugin.__colours__[p1_shape_name]),p1_shape)
+		p1_shape_blocks = map(lambda ((x,y),c): ((x+p1xtl,y+p1ytl),c), p1_shape_blocks)
+		p2_shape = self.game_state['player2']['current_tetromino'](p2_o,p2_x,p2_y)
+		p2_shape_name = self.game_state['player2']['current_tetromino_shape']
+		p2_shape_blocks = map(lambda x: (x,TetrisPlugin.__colours__[p2_shape_name]),p2_shape)
+		p2_shape_blocks = map(lambda ((x,y),c): ((x+p2xtl,y+p2ytl),c), p2_shape_blocks)
+		
+		for ((bx,by),c) in p1_blocks + p2_blocks + p1_shape_blocks + p2_shape_blocks:
+			self.ddrpi_surface.draw_tuple_pixel(bx,by,c)
+			
 	def display_preview(self):
 		"""
 		Construct a splash screen suitable to display for a plugin selection menu
 		"""
 		self.ddrpi_surface.clear_tuple((63,0,0))
+		(p1xtl,p1ytl) = p1tl = self.p1_display_offset
+		p1br = (p1xtl+self.game_width,p1ytl+self.game_height)
+		self.ddrpi_surface.draw_tuple_box(p1tl,p1br,(0,0,0))
+		(p2xtl,p2ytl) = p2tl = self.p2_display_offset
+		p2br = (p2xtl+self.game_width,p2ytl+self.game_height)
+		self.ddrpi_surface.draw_tuple_box(p2tl,p2br,(0,0,0))
+		
+		p1_shape = TetrisPlugin.__tetrominos__['L']('N',3,4)
+		p1_blocks = map(lambda x: (x,(255,255,255)),p1_shape)
+		p1_blocks = map(lambda ((x,y),c): ((x+p1xtl,y+p1ytl),c), p1_blocks)
+		p2_shape = TetrisPlugin.__tetrominos__['I']('W',2,8)
+		p2_blocks = map(lambda x: (x,(0,255,0)),p2_shape)
+		p2_blocks = map(lambda ((x,y),c): ((x+p2xtl,y+p2ytl),c), p2_blocks)
+		
+		for ((bx,by),c) in p1_blocks + p2_blocks:
+			self.ddrpi_surface.draw_tuple_pixel(bx,by,c)
+		
 		self.ddrpi_surface.blit()
 		
 	def pause(self):
