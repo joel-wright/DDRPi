@@ -134,6 +134,8 @@ class TetrisPlugin(DDRPiPlugin):
 		pygame.time.set_timer(USEREVENT+0,p1_speed)
 		p2_speed = self.game_state['player2']['drop_timer']
 		pygame.time.set_timer(USEREVENT+1,p2_speed)
+		
+		self.__state__ = "RUNNING"
 
 	def stop(self):
 		"""
@@ -143,57 +145,95 @@ class TetrisPlugin(DDRPiPlugin):
 		pygame.time.set_timer(USEREVENT+0,0)
 		pygame.time.set_timer(USEREVENT+1,0)
 		
+		self.__state__ = "STOPPED"
+		
+	def pause(self):
+		"""
+		Pause the plugin and stop it writing to the surface
+		"""
+		# Stop recurring events
+		pygame.time.set_timer(USEREVENT+0,0)
+		pygame.time.set_timer(USEREVENT+1,0)
+		
+		self.__state__ = "PAUSED"
+		
+	def resume(self):	
+		"""
+		Resume recurring events after a pause
+		"""
+		# Setup recurring events
+		p1_speed = self.game_state['player1']['drop_timer']
+		pygame.time.set_timer(USEREVENT+0,p1_speed)
+		p2_speed = self.game_state['player2']['drop_timer']
+		pygame.time.set_timer(USEREVENT+1,p2_speed)
+		
+		self.__state__ = "RUNNING"
+	
 	def handle(self, event):
 		"""
 		Handle the pygame event sent to the plugin from the main loop
 		"""
-		# Button mappings
-		buttons = {
-			1: lambda p: self._rotate(p, 1),
-			2: lambda p: self._rotate(p, -1),
-			3: lambda p: self._drop(p)
-		}
-		# Update the boards according to the event
-		# No repeating events; you wanna move twice, push it twice
-		if pygame.event.event_name(event.type) == "JoyButtonDown":
-			# Handle the button
-			joypad = event.joy
-			button = event.button
-			if button in buttons:
-				player = TetrisPlugin.__player__[joypad]
-				landed = buttons[button](player)
-				if landed:
-					self._landed(player)
-			else:
-				logging.debug("Tetris Plugin: Button %s does nothing" % action_value)
-		elif pygame.event.event_name(event.type) == "JoyAxisMotion":
-			# Handle the move
-			joypad = event.joy
-			player = TetrisPlugin.__player__[joypad]
-			delta_axis = TetrisPlugin.__delta__.get(event.axis,None)
-			if delta_axis is not None:
-				delta = delta_axis.get(int(event.value),None)
-				if delta is not None:
-					landed = self._move(player, delta)
+		if self.__state__ == "RUNNING":
+			# Button mappings
+			buttons = {
+				1: lambda p: self._rotate(p, 1),
+				2: lambda p: self._rotate(p, -1),
+				3: lambda p: self._drop(p)
+			}
+			# Update the boards according to the event
+			# No repeating events; you wanna move twice, push it twice
+			if pygame.event.event_name(event.type) == "JoyButtonDown":
+				# Handle the button
+				joypad = event.joy
+				button = event.button
+				if button in buttons:
+					player = TetrisPlugin.__player__[joypad]
+					landed = buttons[button](player)
 					if landed:
 						self._landed(player)
-						# TODO: Check if the game has ended
-		elif pygame.event.event_name(event.type) == "UserEvent":
-			player_number = event.type - 24
-			player = TetrisPlugin.__player__[player_number]
-			landed = self._move(player,(0,1))
-			if landed:
-				self._landed(player)
-				# TODO: Check if the game has ended
+				else:
+					logging.debug("Tetris Plugin: Button %s does nothing" % action_value)
+			elif pygame.event.event_name(event.type) == "JoyAxisMotion":
+				# Handle the move
+				joypad = event.joy
+				player = TetrisPlugin.__player__[joypad]
+				delta_axis = TetrisPlugin.__delta__.get(event.axis,None)
+				if delta_axis is not None:
+					delta = delta_axis.get(int(event.value),None)
+					if delta is not None:
+						landed = self._move(player, delta)
+						if landed:
+							self._landed(player)
+			elif pygame.event.event_name(event.type) == "UserEvent":
+				player_number = event.type - 24
+				player = TetrisPlugin.__player__[player_number]
+				landed = self._move(player,(0,1))
+				if landed:
+					self._landed(player)
 		
-	def _landed(player):
+	def _landed(self, player):
 		"""
-		game state updated required when a piece lands
+		Game state updated required when a piece lands
 		"""
 		self._add_fixed_blocks(player)
 		self._remove_rows(player)
 		self._add_penalty_rows(player)
 		self._select_tetromino(player)
+		ended = self._has_game_ended(player)
+		if ended:
+			self._show_player_has_lost(player)
+			self.stop()
+		
+	def _has_game_ended(self, player):
+		"""
+		Test if the last piece that landed resulted in the end of the game
+		"""
+		blocks = self.game_state[player]['blocks']
+		for ((x,y),c) in blocks:
+			if y < 1:
+				return True
+				
+		return False
 		
 	def update_surface(self):
 		"""
@@ -534,10 +574,16 @@ class TetrisPlugin(DDRPiPlugin):
 		
 		self.ddrpi_surface.blit()
 		
-	def pause(self):
+	def _show_player_has_lost(self, player):
 		"""
-		Pauses the plugin - e.g. saves a game state when we enter menu mode.
+		Add red over the losing player's pieces
 		"""
-		# Does nothing for now - we could just block events in MENU mode
-		return None
-		
+		blocks = self.game_state[player]['blocks']
+		block_positions = map(lambda ((bx,by),bc): (bx,by), blocks)
+		new_blocks = map(lambda ((bx,by),bc): ((bx,by),[(cc - 192) if not (cc - 192) < 0 else 0 for cc in bc]), blocks)
+		new_blocks = map(lambda ((bx,by),(r,g,b)): ((bx,by),((r + 192) if not (r + 192) > 255 else 255, g, b)), new_blocks)
+		for y in range(0,self.game_height):
+			for x in range(0,self.game_width):
+				if not (x,y) in block_positions:
+					new_blocks.append(((x,y),(63,0,0)))
+		self.game_state[player]['blocks'] = new_blocks

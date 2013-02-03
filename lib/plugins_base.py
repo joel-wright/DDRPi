@@ -31,6 +31,12 @@ class DDRPiPlugin(object):
 		"""
 		raise NotImplementedError
 		
+	def resume(self):
+		"""
+		Resumes the plugin from a paused state.
+		"""
+		raise NotImplementedError
+		
 	def display_preview(self):
 		"""
 		Construct a splash screen suitable to display for a plugin selection menu
