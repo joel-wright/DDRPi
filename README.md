@@ -5,6 +5,12 @@ DDRPi Controller Software.
 
 The code lives! We can now switch between plugins, and play a game of Tetris :)
 
+Main controls:
+
+        Select - Enter Menu Mode
+        Start  - Start running the currently selected plugin
+        LB/RB  - Switch between plugins in menu mode
+
 Running a simple test
 ---------------------
 
