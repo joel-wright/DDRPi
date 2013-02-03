@@ -8,64 +8,64 @@ system:
 # Module layout config (we may change this later)
 modules:
   1:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 0
     y_position: 0
-    orientation: N
+    orientation: W
 
   2:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 0
     y_position: 6
-    orientation: N
+    orientation: W
 
   3:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 0
     y_position: 12
-    orientation: N
+    orientation: W
 
   4:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 8
-    y_position: 0
-    orientation: N
+    y_position: 12
+    orientation: W
     
   5:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 8
     y_position: 6
-    orientation: N
+    orientation: W
     
   6:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 8
-    y_position: 12
-    orientation: N
+    y_position: 0
+    orientation: W
     
   7:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 16
     y_position: 0
-    orientation: N
+    orientation: W
     
   8:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 16
     y_position: 6
-    orientation: N
+    orientation: W
     
   9:
-    width: 8
-    height: 6
+    width: 6
+    height: 8
     x_position: 16
     y_position: 12
-    orientation: N
+    orientation: W
