@@ -29,8 +29,7 @@ simulator found in the "tests" folder.
         cd tests
         python ./floorSimulator.py
     
-6. Move the (currently broken) tetris plugin out of the "plugins" folder
-7. Start the main DDRPi app:
+6. Start the main DDRPi app:
 
         python ./DDRPi.py
     
