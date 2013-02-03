@@ -84,8 +84,6 @@ class ColourTestPlugin(DDRPiPlugin):
 		"""
 		Handle the pygame event sent to the plugin from the main loop
 		"""
-		logging.debug("ColourTestPlugin: %s" % event)
-		
 		joypad = action = action_value = event_name = None
 		
 		try:
@@ -95,12 +93,16 @@ class ColourTestPlugin(DDRPiPlugin):
 				button = ColourTestPlugin.__buttons__[event.button]
 				if (button != None):
 					if (button == "A"):
+						logging.debug("ColourTestPlugin: %s" % event)
 						self.colour = self.__colours__["red"]
 					if (button == "B"):
+						logging.debug("ColourTestPlugin: %s" % event)
 						self.colour = self.__colours__["yellow"]
 					if (button == "X"):
+						logging.debug("ColourTestPlugin: %s" % event)
 						self.colour = self.__colours__["blue"]
 					if (button == "Y"):
+						logging.debug("ColourTestPlugin: %s" % event)
 						self.colour = self.__colours__["green"]
 				self.post_invalidate()	
 
@@ -108,22 +110,26 @@ class ColourTestPlugin(DDRPiPlugin):
 				if (event.axis == 0):
 					# Left and Right
 					if (event.value < 0):
-						if (self.position["x"] > 0):						
+						if (self.position["x"] > 0):
+							logging.debug("ColourTestPlugin: %s" % event)						
 							self.position["x"] -= 1
 							self.post_invalidate()
 					if (event.value > 0):
 						if (self.position["x"] < self.ddrpi_surface.width-1):
+							logging.debug("ColourTestPlugin: %s" % event)
 							self.position["x"] += 1
 							self.post_invalidate()
 
 				if (event.axis == 1):
 					# Up and Down
 					if (event.value < 0):
-						if (self.position["y"] > 0):						
+						if (self.position["y"] > 0):
+							logging.debug("ColourTestPlugin: %s" % event)
 							self.position["y"] -= 1
 							self.post_invalidate()
 					if (event.value > 0):
 						if (self.position["y"] < self.ddrpi_surface.height-1):
+							logging.debug("ColourTestPlugin: %s" % event)
 							self.position["y"] += 1
 							self.post_invalidate()
 					pass
@@ -140,7 +146,6 @@ class ColourTestPlugin(DDRPiPlugin):
 		"""
 		if (self.changed == 1):
 
-			logging.debug("ColourTestPlugin: %s" % self.colour)
 			w = self.ddrpi_surface.width
 			h = self.ddrpi_surface.height
 			
