@@ -234,13 +234,31 @@ class TetrisPlugin(DDRPiPlugin):
 		Game state updated required when a piece lands
 		"""
 		self._add_fixed_blocks(player)
-		self._remove_rows(player)
+		removed = self._remove_rows(player)
+		if removed > 0:
+			self._update_speed(player)
 		self._add_penalty_rows(player)
 		self._select_tetromino(player)
 		ended = self._has_game_ended(player)
 		if ended:
 			self._show_player_has_lost(player)
 			self.stop()
+		
+	def _update_speed(self, player):
+		"""
+		Update the recurring drop events to reflect any removed rows
+		"""
+		total_rows_removed = self.game_state[player]['rows_removed']
+		current_drop_timer = self.game_state[player]['drop_timer']
+		new_drop_timer = 1000 - ((total_rows_removed / 10) * 50)
+		if new_drop_timer < 200:
+			new_drop_timer = 200
+		if not current_drop_timer == new_drop_timer:
+			self.game_state[player]['drop_timer'] = new_drop_timer
+			if player == "player1":
+				pygame.time.set_timer(USEREVENT,new_drop_timer)
+			else:
+				pygame.time.set_timer(USEREVENT+1,new_drop_timer)
 		
 	def _has_game_ended(self, player):
 		"""
@@ -432,6 +450,8 @@ class TetrisPlugin(DDRPiPlugin):
 	def _remove_rows(self, player):
 		"""
 		Search for and remove completed rows
+		
+		returns the number of rows removed
 		"""
 		rows_removed = 0
 		xs = range(0,self.game_width)
@@ -488,6 +508,8 @@ class TetrisPlugin(DDRPiPlugin):
 			
 		if not penalty == 0:
 			self.game_state[player]['penalty_rows_created'] = penalty
+			
+		return rows_removed
 		
 	def _add_fixed_blocks(self, player):
 		"""
