@@ -134,7 +134,6 @@ class TetrisPlugin(DDRPiPlugin):
 		pygame.time.set_timer(USEREVENT+0,p1_speed)
 		p2_speed = self.game_state['player2']['drop_timer']
 		pygame.time.set_timer(USEREVENT+1,p2_speed)
-		
 		self.__state__ = "RUNNING"
 
 	def stop(self):
@@ -144,7 +143,6 @@ class TetrisPlugin(DDRPiPlugin):
 		# Stop recurring events
 		pygame.time.set_timer(USEREVENT+0,0)
 		pygame.time.set_timer(USEREVENT+1,0)
-		
 		self.__state__ = "STOPPED"
 		
 	def pause(self):
@@ -154,8 +152,8 @@ class TetrisPlugin(DDRPiPlugin):
 		# Stop recurring events
 		pygame.time.set_timer(USEREVENT+0,0)
 		pygame.time.set_timer(USEREVENT+1,0)
-		
 		self.__state__ = "PAUSED"
+		logging.debug("TetrisPlugin: Paused")
 		
 	def resume(self):	
 		"""
@@ -166,7 +164,6 @@ class TetrisPlugin(DDRPiPlugin):
 		pygame.time.set_timer(USEREVENT+0,p1_speed)
 		p2_speed = self.game_state['player2']['drop_timer']
 		pygame.time.set_timer(USEREVENT+1,p2_speed)
-		
 		self.__state__ = "RUNNING"
 	
 	def handle(self, event):
@@ -178,7 +175,8 @@ class TetrisPlugin(DDRPiPlugin):
 			buttons = {
 				1: lambda p: self._rotate(p, 1),
 				2: lambda p: self._rotate(p, -1),
-				3: lambda p: self._drop(p)
+				3: lambda p: self._drop(p),
+				9: lambda p: self.pause()
 			}
 			# Update the boards according to the event
 			# No repeating events; you wanna move twice, push it twice
@@ -192,7 +190,7 @@ class TetrisPlugin(DDRPiPlugin):
 					if landed:
 						self._landed(player)
 				else:
-					logging.debug("Tetris Plugin: Button %s does nothing" % action_value)
+					logging.debug("Tetris Plugin: Button %s does nothing" % button)
 			elif pygame.event.event_name(event.type) == "JoyAxisMotion":
 				# Handle the move
 				joypad = event.joy
@@ -210,6 +208,26 @@ class TetrisPlugin(DDRPiPlugin):
 				landed = self._move(player,(0,1))
 				if landed:
 					self._landed(player)
+		elif self.__state__ == "STOPPED":
+			if pygame.event.event_name(event.type) == "JoyButtonDown":
+				# Handle the start button
+				joypad = event.joy
+				button = event.button
+				if button == 9:
+					self._reset()
+					self.start()
+		elif self.__state__ == "PAUSED":
+			if pygame.event.event_name(event.type) == "JoyButtonDown":
+				# Handle the start button
+				joypad = event.joy
+				button = event.button
+				if button == 9:
+					self.resume()
+				if button == 0:
+					self._reset()
+					self.start()
+		else:
+			logging.debug("TetrisPlugin: Need to handle state: " % self.__state__)
 		
 	def _landed(self, player):
 		"""

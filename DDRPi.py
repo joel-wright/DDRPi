@@ -284,13 +284,15 @@ class DDRPi(object):
 		if pygame.event.event_name(e.type) == "JoyButtonDown":
 			if self.mode == "RUNNING":
 				# 2 = B, 8 = SELECT, cancel, go back to running
-                                if e.button == 8:
+				if e.button == 8:
 					logging.debug("DDRPi: Entering menu")
 					self.mode = "MENU"
 					self.active_plugin.pause()
 					return True
+				else:
+					return False
 
-			if self.mode == "MENU":
+			elif self.mode == "MENU":
 				# 2 = B, 8 = SELECT, cancel, go back to running
 				if (e.button == 2 or e.button == 8):
 					logging.debug("DDRPi: Exiting menu")
@@ -299,7 +301,7 @@ class DDRPi(object):
 					return True
 
 				# 1 = A, 9 = START, accept, start this plugin
-				if (e.button == 1 or e.button == 9):
+				elif (e.button == 1 or e.button == 9):
 					available_plugins = self.__registry__.get_names()
 					logging.debug("DDRPi: Selected plugin")
 					self.mode = "RUNNING"
@@ -311,7 +313,7 @@ class DDRPi(object):
 					return True
 					
 				# 4 = LB, scroll left
-				if (e.button == 4):
+				elif (e.button == 4):
 					available_plugins = self.__registry__.get_names()
 					self.temporary_plugin_index = (self.temporary_plugin_index + 1) % len(available_plugins)
 					self._preview_plugin(available_plugins[self.temporary_plugin_index])
@@ -319,7 +321,7 @@ class DDRPi(object):
 					return True
 				
 				# 5 = RB, scroll right
-				if (e.button == 5):
+				elif (e.button == 5):
 					available_plugins = self.__registry__.get_names()
 					self.temporary_plugin_index = (self.temporary_plugin_index - 1) % len(available_plugins)
 					self._preview_plugin(available_plugins[self.temporary_plugin_index])
@@ -327,7 +329,7 @@ class DDRPi(object):
 					return True
 					
 				# 8 = SELECT, go into menu mode, pausing the current plugin
-				if (e.button == 8):
+				elif (e.button == 8):
 					available_plugins = self.__registry__.get_names()
 					logging.debug("DDRPi: Entering menu, %d plugins available" % len(available_plugins))
 					self.mode = "MENU"
@@ -336,7 +338,13 @@ class DDRPi(object):
 						self.active_plugin.pause()
 						self.active_plugin.display_preview(self.config, self.dance_surface)
 					self.temporary_plugin_index = self.plugin_index
+
+				else:
+					return False
 		
+			else:
+				return False
+				
 		return False
 
 # Start the dance floor application
