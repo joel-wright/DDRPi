@@ -11,6 +11,8 @@ from lib.layout import DisplayLayout
 from lib.plugins_base import DDRPiPlugin, PluginRegistry
 from pygame.locals import *
 
+
+
 class DanceSurface(object):
 	"""
 	The class representing the drawable dance floor. This is a wrapper around
@@ -152,6 +154,11 @@ class DDRPi(object):
 		
 		# Inititalise Controllers
 		self.__init_controllers__()
+		
+		# Enter debug mode
+		if self.config["system"]["debug"]:
+			logger = logging.getLogger()
+			logger.setLevel(logging.DEBUG)
 
 	def __load_config__(self):
 		"""
@@ -252,7 +259,7 @@ class DDRPi(object):
 					# TODO: decide whether to ONLY pass gamepad events to plugins...
 					
 					# active plugin handle e
-					logging.debug("Active plugin handling event: %s" % e)
+					#logging.debug("Active plugin handling event: %s" % e)
 					self.active_plugin.handle(e)
 				
 				# Update the display

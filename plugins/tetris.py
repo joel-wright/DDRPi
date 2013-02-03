@@ -7,9 +7,6 @@ import random
 from DDRPi import DDRPiPlugin
 from pygame.locals import *
 
-logger = logging.getLogger()
-logger.setLevel(logging.DEBUG)
-
 class TetrisPlugin(DDRPiPlugin):
 	
 	# Static maps to define the shape and rotation of tetrominos
@@ -18,7 +15,7 @@ class TetrisPlugin(DDRPiPlugin):
 		'J': lambda o,x,y: TetrisPlugin.__J__[o](x,y),
 		'S': lambda o,x,y: TetrisPlugin.__S__[o](x,y),
 		'Z': lambda o,x,y: TetrisPlugin.__Z__[o](x,y),
-		'O': lambda o,x,y: TetrisPlugin.__O__(x,y), # Orientation doesn't matter for O
+		'O': lambda o,x,y: TetrisPlugin.__O__[o](x,y),
 		'T': lambda o,x,y: TetrisPlugin.__T__[o](x,y),
 		'I': lambda o,x,y: TetrisPlugin.__I__[o](x,y)
 	}
@@ -51,7 +48,12 @@ class TetrisPlugin(DDRPiPlugin):
 		'W': lambda x,y: [(x+1,y),(x+1,y+1),(x,y+1),(x,y+2)]  # E == W
 	}
 	
-	__O__ = lambda x,y: [(x,y),(x+1,y),(x,y+1),(x+1,y+1)]
+	__O__ = {
+		'N': lambda x,y: [(x,y),(x+1,y),(x,y+1),(x+1,y+1)],
+		'E': lambda x,y: [(x,y),(x+1,y),(x,y+1),(x+1,y+1)],
+		'S': lambda x,y: [(x,y),(x+1,y),(x,y+1),(x+1,y+1)],
+		'W': lambda x,y: [(x,y),(x+1,y),(x,y+1),(x+1,y+1)],
+	}
 	
 	__T__ = {
 		'N': lambda x,y: [(x,y),(x+1,y),(x+2,y),(x+1,y+1)],
@@ -85,13 +87,6 @@ class TetrisPlugin(DDRPiPlugin):
 	__player__ = {
 		0: "player1",
 		1: "player2"
-	}
-	
-	# Button mappings
-	__buttons__ = {
-		1: lambda p: self._rotate(p, 1),
-		2: lambda p: self._rotate(p, -1),
-		3: lambda p: self._drop(p)
 	}
 	
 	# Colours for the tetrominos
@@ -152,15 +147,21 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		Handle the pygame event sent to the plugin from the main loop
 		"""
+		# Button mappings
+		buttons = {
+			1: lambda p: self._rotate(p, 1),
+			2: lambda p: self._rotate(p, -1),
+			3: lambda p: self._drop(p)
+		}
 		# Update the boards according to the event
 		# No repeating events; you wanna move twice, push it twice
 		if pygame.event.event_name(event.type) == "JoyButtonDown":
 			# Handle the button
 			joypad = event.joy
 			button = event.button
-			if button in TetrisPlugin.__buttons__:
+			if button in buttons:
 				player = TetrisPlugin.__player__[joypad]
-				TetrisPlugin.__buttons__[button](player)
+				buttons[button](player)
 			else:
 				logging.debug("Tetris Plugin: Button %s does nothing" % action_value)
 		elif pygame.event.event_name(event.type) == "JoyAxisMotion":
@@ -173,7 +174,7 @@ class TetrisPlugin(DDRPiPlugin):
 				if delta is not None:
 					landed = self._move(player, delta)
 					if landed:
-						self._add_fixed_blocks(player, (cx,cy))
+						self._add_fixed_blocks(player)
 						self._remove_rows(player)
 						self._add_penalty_rows(player)
 						self._select_tetromino(player)
@@ -183,7 +184,7 @@ class TetrisPlugin(DDRPiPlugin):
 			player = TetrisPlugin.__player__[player_number]
 			landed = self._move(player,(0,1))
 			if landed:
-				self._add_fixed_blocks(player, (cx,cy))
+				self._add_fixed_blocks(player)
 				self._remove_rows(player)
 				self._add_penalty_rows(player)
 				self._select_tetromino(player)
@@ -241,11 +242,10 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		Keep moving the piece down until it hits something - record the new blocks
 		"""
-		finished = False
+		landed = False
 		
-		while not finished:
-			moved = self._move(player, (0,1))
-			finished = not(moved)
+		while not landed:
+			landed = self._move(player, (0,1))
 
 	def _move(self, player, delta):
 		"""
@@ -263,7 +263,7 @@ class TetrisPlugin(DDRPiPlugin):
 			if self._legal_move(player, o, np):
 				self.game_state[player]['current_tetromino_pos'] = np
 				return False
-			elif self._tetromino_has_landed(player, np):
+			elif delta == (0,1) and self._tetromino_has_landed(player, np):
 				return True
 			else:
 				# No move possible, but only left/right, so ignore the request
@@ -278,7 +278,23 @@ class TetrisPlugin(DDRPiPlugin):
 		
 		returns True if the block has landed
 		"""
-		# TODO
+		(tx,ty) = new_position
+		orient = TetrisPlugin.__orientations__[self.game_state[player]['current_orientation']]
+		block_positions = self.game_state[player]['current_tetromino'](orient,tx,ty)
+		current_blocks = self.game_state[player]['blocks']
+		
+		# Test whether is hits an already fixed block
+		for bp in block_positions:
+			for ((x,y),c) in current_blocks:
+				if bp == (x,y):
+					return True
+					
+		# Test whether we've hit the bottom
+		for (x,y) in block_positions:
+			if y == self.game_height:
+				return True
+				
+		return False
 
 	def _legal_move(self, player, orient, pos):
 		"""
@@ -289,8 +305,14 @@ class TetrisPlugin(DDRPiPlugin):
 		block_positions = self.game_state[player]['current_tetromino'](orient,tx,ty)
 		current_blocks = self.game_state[player]['blocks']
 		
+		# Test whether we have fallen outside of the game space
+		for (x,y) in block_positions:
+			if x < 0 or x >= self.game_width or y >= self.game_height:
+				return False
+		
+		# Test whether is hits an already fixed block
 		for bp in block_positions:
-			for (x,y,c) in current_blocks:
+			for ((x,y),c) in current_blocks:
 				if bp == (x,y):
 					return False
 		
@@ -305,7 +327,7 @@ class TetrisPlugin(DDRPiPlugin):
 		no = (co+dir_value)%4
 		
 		# If a rotation would result in an illegal move then ignore it
-		if self._legal_move(player, no, cp):
+		if self._legal_move(player, TetrisPlugin.__orientations__[no], cp):
 			self.game_state[player]['current_orientation'] = no
 			return True
 		else:
@@ -348,32 +370,48 @@ class TetrisPlugin(DDRPiPlugin):
 		Search for and remove completed rows
 		"""
 		rows_removed = 0
-		ys = range(0,self.game_height)
-		ys.reverse()
 		xs = range(0,self.game_width)
 		
-		for y in ys:
-			fixed_blocks = self.game_state[player]['blocks']
+		fixed_blocks = self.game_state[player]['blocks']
+		y = self.game_height
+		finished = False
+		while not finished:
+			fixed_block_positions = map(lambda (p,c): p,fixed_blocks)
 			line_full = True
 			for x in xs:
-				if not ((bx,by),bc) in fixed_blocks:
+				if not (x,y) in fixed_block_positions:
 					line_full = False
-					break
 			
 			# If the line is full, remove those blocks, move all those above down
+			# and leave the index of the line we're checking the same (a full row
+			# may have just moved down)
 			if line_full:
+				logging.debug("TetrisPlugin: Row %s is full; removing" % y)
 				rows_removed += 1
 				
+				blocks_to_remove = []
 				for ((bx,by),bc) in fixed_blocks:
-					if y == by:
-						fixed_blocks.remove(((bx,by),bc))
-					
+					if by == y:
+						blocks_to_remove.append(((bx,by),bc))
+				for b in blocks_to_remove:
+					fixed_blocks.remove(b)
+				
+				new_fixed_blocks = []
+				blocks_to_remove = []
+				for ((bx,by),bc) in fixed_blocks:
 					if by < y:
-						fixed_blocks.remove(((bx,by),bc))
-						fixed_blocks.append(((bx,by+1),bc))
+						blocks_to_remove.append(((bx,by),bc))
+						new_fixed_blocks.append(((bx,by+1),bc))
+				for b in blocks_to_remove:
+					fixed_blocks.remove(b)
+				fixed_blocks += new_fixed_blocks
+			else:
+				y -= 1
+				
+			if y == 0:
+				finished = True
 					
-				self.game_state[player]['blocks'] = fixed_blocks
-			
+		self.game_state[player]['blocks'] = fixed_blocks
 		self.game_state[player]['rows_removed'] += rows_removed
 		
 		# Add rows removed to the other player (4=4, otherwise n-1)
@@ -387,11 +425,11 @@ class TetrisPlugin(DDRPiPlugin):
 		if not penalty == 0:
 			self.game_state[player]['penalty_rows_created'] = penalty
 		
-	def _add_fixed_blocks(self, player, pos):
+	def _add_fixed_blocks(self, player):
 		"""
 		Add the given player's current piece to their list of fixed blocks
 		"""
-		o = self.game_state[player]['current_orientation']
+		o = TetrisPlugin.__orientations__[self.game_state[player]['current_orientation']]
 		(x,y) = self.game_state[player]['current_tetromino_pos']
 		shape = self.game_state[player]['current_tetromino_shape']
 		c = TetrisPlugin.__colours__[shape]
@@ -399,7 +437,7 @@ class TetrisPlugin(DDRPiPlugin):
 		coloured_blocks_to_add = map((lambda p: (p,c)),positions_to_add)
 		self.game_state[player]['blocks'] += coloured_blocks_to_add
 
-	def _add_penalty_rows(self, player, number):
+	def _add_penalty_rows(self, player):
 		"""
 		Add the given number of punishment rows to the given player
 		"""
@@ -462,8 +500,9 @@ class TetrisPlugin(DDRPiPlugin):
 		p2_shape_blocks = map(lambda x: (x,TetrisPlugin.__colours__[p2_shape_name]),p2_shape)
 		p2_shape_blocks = map(lambda ((x,y),c): ((x+p2xtl,y+p2ytl),c), p2_shape_blocks)
 		
-		for ((bx,by),c) in p1_blocks + p2_blocks + p1_shape_blocks + p2_shape_blocks:
-			self.ddrpi_surface.draw_tuple_pixel(bx,by,c)
+		for ((bx,by),c) in p1_blocks + p1_shape_blocks + p2_blocks + p2_shape_blocks:
+			if by >= p1ytl:
+				self.ddrpi_surface.draw_tuple_pixel(bx,by,c)
 			
 	def display_preview(self):
 		"""
