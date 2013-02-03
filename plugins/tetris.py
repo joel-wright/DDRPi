@@ -161,7 +161,9 @@ class TetrisPlugin(DDRPiPlugin):
 			button = event.button
 			if button in buttons:
 				player = TetrisPlugin.__player__[joypad]
-				buttons[button](player)
+				landed = buttons[button](player)
+				if landed:
+					self._landed(player)
 			else:
 				logging.debug("Tetris Plugin: Button %s does nothing" % action_value)
 		elif pygame.event.event_name(event.type) == "JoyAxisMotion":
@@ -174,21 +176,24 @@ class TetrisPlugin(DDRPiPlugin):
 				if delta is not None:
 					landed = self._move(player, delta)
 					if landed:
-						self._add_fixed_blocks(player)
-						self._remove_rows(player)
-						self._add_penalty_rows(player)
-						self._select_tetromino(player)
+						self._landed(player)
 						# TODO: Check if the game has ended
 		elif pygame.event.event_name(event.type) == "UserEvent":
 			player_number = event.type - 24
 			player = TetrisPlugin.__player__[player_number]
 			landed = self._move(player,(0,1))
 			if landed:
-				self._add_fixed_blocks(player)
-				self._remove_rows(player)
-				self._add_penalty_rows(player)
-				self._select_tetromino(player)
+				self._landed(player)
 				# TODO: Check if the game has ended
+		
+	def _landed(player):
+		"""
+		game state updated required when a piece lands
+		"""
+		self._add_fixed_blocks(player)
+		self._remove_rows(player)
+		self._add_penalty_rows(player)
+		self._select_tetromino(player)
 		
 	def update_surface(self):
 		"""
@@ -246,6 +251,8 @@ class TetrisPlugin(DDRPiPlugin):
 		
 		while not landed:
 			landed = self._move(player, (0,1))
+			
+		return True
 
 	def _move(self, player, delta):
 		"""
@@ -329,9 +336,8 @@ class TetrisPlugin(DDRPiPlugin):
 		# If a rotation would result in an illegal move then ignore it
 		if self._legal_move(player, TetrisPlugin.__orientations__[no], cp):
 			self.game_state[player]['current_orientation'] = no
-			return True
-		else:
-			return False
+			
+		return False
 		
 	def _get_game_dimensions(self):
 		"""
