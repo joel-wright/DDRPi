@@ -27,14 +27,18 @@ class FloorComms(object):
 			self.ser = serial.Serial(self.tty, self.baud, timeout=self.timeout)
 
 	def send_data(self,data_buffer):
+		s = ""
 		for i in data_buffer:
-			self.s_port.write(chr(i%256))
-		self.s_port.write(chr(1))
+			s += chr(i%256)
+		s += chr(1)
+		self.s_port.write(s)
 
 	def clear(self):  
+		s = ""
 		for i in range(self.pixels*3):
-			self.s_port.write(chr(0))
-		self.s_port.write(chr(1))
+			s += chr(0)
+		s += chr(1)
+		self.s_port.write(s)
 
 	def get_blank_buffer(self):
 		blank_buffer = []
