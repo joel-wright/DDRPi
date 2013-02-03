@@ -3,7 +3,7 @@ DDRPi
 
 DDRPi Controller Software.
 
-Nothing much to look at yet, but hopefully this will change very soon :)
+The code lives! We can now switch between plugins, and play a game of Tetris :)
 
 Running a simple test
 ---------------------
@@ -28,7 +28,16 @@ simulator found in the "tests" folder.
 
         python ./DDRPi.py
     
-You should now see random patterns on a simulated dance floor that corresponds
-to your config file... Have fun :)
+You should now see the inintial menu screen. A preview of each plugin is shown
+by pressing the buffer buttons. When you see the plugin you want, press start
+and the plugin will start running.
+
+Tetris Controls
+---------------
+
+Start - Pause/Resume (also start a new game when on has ended)
+A/B - Rotate right/left
+Y - Drop the current piece
+X - Start a new game when paused
 
 
