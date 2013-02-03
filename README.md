@@ -35,9 +35,12 @@ and the plugin will start running.
 Tetris Controls
 ---------------
 
-Start - Pause/Resume (also start a new game when on has ended)
-A/B - Rotate right/left
-Y - Drop the current piece
-X - Start a new game when paused
+The obvious direction controls are as you'd expect (we ignore up of course). The
+other buttons are as follows:
+
+        Start - Pause/Resume (also start a new game when on has ended)
+        A/B   - Rotate right/left
+        Y     - Drop the current piece
+        X     - Start a new game when paused
 
 
