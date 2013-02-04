@@ -158,25 +158,29 @@ class TetrisPlugin(DDRPiPlugin):
 		Pause the plugin and stop it writing to the surface
 		"""
 		# Stop recurring events
-		pygame.time.set_timer(USEREVENT+0,0)
-		pygame.time.set_timer(USEREVENT+1,0)
-		pygame.time.set_timer(USEREVENT+2,0)
-		pygame.time.set_timer(USEREVENT+3,0)
-		pygame.time.set_timer(USEREVENT+4,0)
-		pygame.time.set_timer(USEREVENT+5,0)
-		self.__state__ = "PAUSED"
-		logging.debug("TetrisPlugin: Paused")
-		
+		if not self.__state__ == "STOPPED":
+			pygame.time.set_timer(USEREVENT+0,0)
+			pygame.time.set_timer(USEREVENT+1,0)
+			pygame.time.set_timer(USEREVENT+2,0)
+			pygame.time.set_timer(USEREVENT+3,0)
+			pygame.time.set_timer(USEREVENT+4,0)
+			pygame.time.set_timer(USEREVENT+5,0)
+			self.__state__ = "PAUSED"
+			logging.debug("TetrisPlugin: Paused")
+			
 	def resume(self):	
 		"""
 		Resume recurring events after a pause
 		"""
-		# Setup recurring events
-		p1_speed = self.game_state['player1']['drop_timer']
-		pygame.time.set_timer(USEREVENT+0,p1_speed)
-		p2_speed = self.game_state['player2']['drop_timer']
-		pygame.time.set_timer(USEREVENT+1,p2_speed)
-		self.__state__ = "RUNNING"
+		if self.__state__ == "STOPPED":
+			self._draw_state()
+		else:
+			# Just restart recurring events
+			p1_speed = self.game_state['player1']['drop_timer']
+			pygame.time.set_timer(USEREVENT+0,p1_speed)
+			p2_speed = self.game_state['player2']['drop_timer']
+			pygame.time.set_timer(USEREVENT+1,p2_speed)
+			self.__state__ = "RUNNING"
 	
 	def handle(self, event):
 		"""
