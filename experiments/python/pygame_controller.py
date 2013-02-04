@@ -11,9 +11,9 @@ def main():
       events = pygame.event.get()
       for e in events:
          try:
-            x = e.value
+            x = e.axis
             if x is not None:
-               if not x == 0.0:
+               if not x == 2:
                   print("%s" % e)
          except Exception as ex:
             print("%s" % e)

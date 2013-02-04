@@ -202,7 +202,7 @@ class DDRPi(object):
 		self.__controllers__ = {}
 		
 		for c in range(0,num_c):
-			self.__controllers__[c] = pygame.joystick.Joystick(0)
+			self.__controllers__[c] = pygame.joystick.Joystick(c)
 			self.__controllers__[c].init()
 			
 		logging.debug("DDRPi: Initialised %s controllers" % num_c)

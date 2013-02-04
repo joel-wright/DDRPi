@@ -99,15 +99,19 @@ class TetrisPlugin(DDRPiPlugin):
 	#	Z - Magenta
 	#	T - Cyan
 	#	
-	__colours__ = {
+	__block_colours__ = {
 		"S"   : (255,0,0),
 		"I"   : (0,255,0),
 		"J"   : (0,0,255),
 		"T"   : (0,255,255),
 		"Z"   : (255,0,255),
 		"O"   : (255,255,0),
-		"L"   : (255,255,255),
-		"fill": (0,0,63)
+		"L"   : (255,255,255)
+	}
+	
+	__other_colours__ = {
+		"fill": (0,0,63),
+		"fill_danger": (63,0,0)
 	}
 	
 	def configure(self, config, image_surface):
@@ -191,6 +195,12 @@ class TetrisPlugin(DDRPiPlugin):
 						self._landed(player)
 				else:
 					logging.debug("Tetris Plugin: Button %s does nothing" % button)
+			#elif pygame.event.event_name(event.type) == "JoyButtonUp":
+			#	# Handle the button release
+			#	joypad = event.joy
+			#	button = event.button
+			#	if button in buttons:
+			#		
 			elif pygame.event.event_name(event.type) == "JoyAxisMotion":
 				# Handle the move
 				joypad = event.joy
@@ -203,11 +213,12 @@ class TetrisPlugin(DDRPiPlugin):
 						if landed:
 							self._landed(player)
 			elif pygame.event.event_name(event.type) == "UserEvent":
-				player_number = event.type - 24
-				player = TetrisPlugin.__player__[player_number]
-				landed = self._move(player,(0,1))
-				if landed:
-					self._landed(player)
+				event_number = event.type - 24
+				if event_number < 2: # Events 0 and 1 are the down moves for players
+					player = TetrisPlugin.__player__[event_number]
+					landed = self._move(player,(0,1))
+					if landed:
+						self._landed(player)
 		elif self.__state__ == "STOPPED":
 			if pygame.event.event_name(event.type) == "JoyButtonDown":
 				# Handle the start button
@@ -289,7 +300,10 @@ class TetrisPlugin(DDRPiPlugin):
 				'current_orientation': None,
 				'rows_removed': 0,
 				'penalty_rows_created': 0,
-				'drop_timer': 1000
+				'drop_timer': 1000,
+				'future_tetrominos': [],
+				'repeat_delta': None,
+				'repeat_button': None
 			},
 			'player2': {
 				'blocks': [],
@@ -299,7 +313,10 @@ class TetrisPlugin(DDRPiPlugin):
 				'current_orientation': None,
 				'rows_removed': 0,
 				'penalty_rows_created': 0,
-				'drop_timer': 1000
+				'drop_timer': 1000,
+				'future_tetrominos': [],
+				'repeat_delta': None,
+				'repeat_button': None
 			},
 			'paused': True
 		}
@@ -310,14 +327,27 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		Randomly select a new piece
 		"""
-		rn = random.randint(0,6)
-		rt = TetrisPlugin.__tetrominos__.keys()[rn]
-		t = TetrisPlugin.__tetrominos__[rt]
+		future_tetrominos = self.game_state[player]['future_tetrominos']
 		
-		self.game_state[player]['current_tetromino'] = t
-		self.game_state[player]['current_tetromino_shape'] = rt
-		self.game_state[player]['current_tetromino_pos'] = (self.game_width/2, -2)
-		self.game_state[player]['current_orientation'] = 0
+		if future_tetrominos == []:
+			rn = random.randint(0,6)
+			rt = TetrisPlugin.__tetrominos__.keys()[rn]
+			t = TetrisPlugin.__tetrominos__[rt]
+		
+			self.game_state[player]['current_tetromino'] = t
+			self.game_state[player]['current_tetromino_shape'] = rt
+			self.game_state[player]['current_tetromino_pos'] = (self.game_width/2, -2)
+			self.game_state[player]['current_orientation'] = 0
+			
+			players = TetrisPlugin.__player__.values()
+			[op] = filter(lambda x: not x == player, players)
+			self.game_state[op]['future_tetrominos'].insert(0,(t,rt))
+		else:
+			(t, rt) = self.game_state[player]['future_tetrominos'].pop()
+			self.game_state[player]['current_tetromino'] = t
+			self.game_state[player]['current_tetromino_shape'] = rt
+			self.game_state[player]['current_tetromino_pos'] = (self.game_width/2, -2)
+			self.game_state[player]['current_orientation'] = 0
 
 	def _drop(self, player):
 		"""
@@ -518,7 +548,7 @@ class TetrisPlugin(DDRPiPlugin):
 		o = TetrisPlugin.__orientations__[self.game_state[player]['current_orientation']]
 		(x,y) = self.game_state[player]['current_tetromino_pos']
 		shape = self.game_state[player]['current_tetromino_shape']
-		c = TetrisPlugin.__colours__[shape]
+		c = TetrisPlugin.__block_colours__[shape]
 		positions_to_add = self.game_state[player]['current_tetromino'](o,x,y)
 		coloured_blocks_to_add = map((lambda p: (p,c)),positions_to_add)
 		self.game_state[player]['blocks'] += coloured_blocks_to_add
@@ -534,12 +564,12 @@ class TetrisPlugin(DDRPiPlugin):
 		self.game_state[op]['penalty_rows_created'] = 0
 		
 		# Get a random hole position and the y position for the rows to be added
-		hole_pos = random.randint(0, self.game_width)
+		hole_pos = random.randint(0, self.game_width - 1)
 		row_y = min([y for ((x,y),c) in self.game_state[player]['blocks']])
 		
 		# Create the positions to be added
 		new_positions = []
-		colours = TetrisPlugin.__colours__
+		colours = TetrisPlugin.__block_colours__
 		col = colours[colours.keys()[random.randint(0,len(colours)-1)]]
 		for y in range(row_y - rows_to_add, row_y):
 			for x in range(0,self.game_width):
@@ -555,7 +585,7 @@ class TetrisPlugin(DDRPiPlugin):
 		This also handles the positioning of the 2 player game areas and
 		background.
 		"""
-		self.ddrpi_surface.clear_tuple(TetrisPlugin.__colours__['fill'])
+		self.ddrpi_surface.clear_tuple(TetrisPlugin.__other_colours__['fill'])
 		
 		# Draw black background to game states
 		(p1xtl,p1ytl) = p1tl = self.p1_display_offset
@@ -579,11 +609,11 @@ class TetrisPlugin(DDRPiPlugin):
 		
 		p1_shape = self.game_state['player1']['current_tetromino'](p1_o,p1_x,p1_y)
 		p1_shape_name = self.game_state['player1']['current_tetromino_shape']
-		p1_shape_blocks = map(lambda x: (x,TetrisPlugin.__colours__[p1_shape_name]),p1_shape)
+		p1_shape_blocks = map(lambda x: (x,TetrisPlugin.__block_colours__[p1_shape_name]),p1_shape)
 		p1_shape_blocks = map(lambda ((x,y),c): ((x+p1xtl,y+p1ytl),c), p1_shape_blocks)
 		p2_shape = self.game_state['player2']['current_tetromino'](p2_o,p2_x,p2_y)
 		p2_shape_name = self.game_state['player2']['current_tetromino_shape']
-		p2_shape_blocks = map(lambda x: (x,TetrisPlugin.__colours__[p2_shape_name]),p2_shape)
+		p2_shape_blocks = map(lambda x: (x,TetrisPlugin.__block_colours__[p2_shape_name]),p2_shape)
 		p2_shape_blocks = map(lambda ((x,y),c): ((x+p2xtl,y+p2ytl),c), p2_shape_blocks)
 		
 		for ((bx,by),c) in p1_blocks + p1_shape_blocks + p2_blocks + p2_shape_blocks:
