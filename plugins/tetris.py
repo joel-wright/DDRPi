@@ -147,6 +147,10 @@ class TetrisPlugin(DDRPiPlugin):
 		# Stop recurring events
 		pygame.time.set_timer(USEREVENT+0,0)
 		pygame.time.set_timer(USEREVENT+1,0)
+		pygame.time.set_timer(USEREVENT+2,0)
+		pygame.time.set_timer(USEREVENT+3,0)
+		pygame.time.set_timer(USEREVENT+4,0)
+		pygame.time.set_timer(USEREVENT+5,0)
 		self.__state__ = "STOPPED"
 		
 	def pause(self):
@@ -156,6 +160,10 @@ class TetrisPlugin(DDRPiPlugin):
 		# Stop recurring events
 		pygame.time.set_timer(USEREVENT+0,0)
 		pygame.time.set_timer(USEREVENT+1,0)
+		pygame.time.set_timer(USEREVENT+2,0)
+		pygame.time.set_timer(USEREVENT+3,0)
+		pygame.time.set_timer(USEREVENT+4,0)
+		pygame.time.set_timer(USEREVENT+5,0)
 		self.__state__ = "PAUSED"
 		logging.debug("TetrisPlugin: Paused")
 		
@@ -182,6 +190,16 @@ class TetrisPlugin(DDRPiPlugin):
 				3: lambda p: self._drop(p),
 				9: lambda p: self.pause()
 			}
+			repeats = {
+				"player1": {
+					"axis": 2,
+					"button": 3
+				},
+				"player2": {
+					"axis": 4,
+					"button": 5
+				}
+			}
 			# Update the boards according to the event
 			# No repeating events; you wanna move twice, push it twice
 			if pygame.event.event_name(event.type) == "JoyButtonDown":
@@ -189,18 +207,26 @@ class TetrisPlugin(DDRPiPlugin):
 				joypad = event.joy
 				button = event.button
 				if button in buttons:
+					# Set repeating event
+					repeat_speed = self.game_state['initial_repeat_delay']
 					player = TetrisPlugin.__player__[joypad]
+					user_event_diff = repeats[player]["button"]
+					self.game_state[player]["repeat_button"] = button
+					pygame.time.set_timer(USEREVENT+user_event_diff,repeat_speed)
 					landed = buttons[button](player)
 					if landed:
 						self._landed(player)
 				else:
 					logging.debug("Tetris Plugin: Button %s does nothing" % button)
-			#elif pygame.event.event_name(event.type) == "JoyButtonUp":
-			#	# Handle the button release
-			#	joypad = event.joy
-			#	button = event.button
-			#	if button in buttons:
-			#		
+			elif pygame.event.event_name(event.type) == "JoyButtonUp":
+				# Handle the button release
+				joypad = event.joy
+				player = TetrisPlugin.__player__[joypad]
+				button = event.button
+				if button in buttons:
+					if button == self.game_state[player]["repeat_button"]:
+						user_event_diff = repeats[player]["button"]
+						pygame.time.set_timer(USEREVENT+user_event_diff,0)
 			elif pygame.event.event_name(event.type) == "JoyAxisMotion":
 				# Handle the move
 				joypad = event.joy
@@ -209,9 +235,18 @@ class TetrisPlugin(DDRPiPlugin):
 				if delta_axis is not None:
 					delta = delta_axis.get(int(event.value),None)
 					if delta is not None:
+						repeat_speed = self.game_state['initial_repeat_delay']
+						user_event_diff = repeats[player]["axis"]
+						self.game_state[player]["repeat_axis"] = event.axis
+						self.game_state[player]["repeat_delta"] = delta
+						pygame.time.set_timer(USEREVENT+user_event_diff,repeat_speed)
 						landed = self._move(player, delta)
 						if landed:
 							self._landed(player)
+					if int(event.value) == 0:
+						if event.axis == self.game_state[player]["repeat_axis"]:
+							user_event_diff = repeats[player]["axis"]
+							pygame.time.set_timer(USEREVENT+user_event_diff,0)
 			elif pygame.event.event_name(event.type) == "UserEvent":
 				event_number = event.type - 24
 				if event_number < 2: # Events 0 and 1 are the down moves for players
@@ -219,6 +254,42 @@ class TetrisPlugin(DDRPiPlugin):
 					landed = self._move(player,(0,1))
 					if landed:
 						self._landed(player)
+				elif event_number == 2: # USEREVENT+2 = p1-axis-repeat
+					logging.debug("TetrisPlugin: Handling repeating event number: %s" % event_number)
+					speed = self.game_state['button_repeat_speed']
+					pygame.time.set_timer(USEREVENT+2,speed)
+					delta = self.game_state["player1"]["repeat_delta"]
+					landed = self._move("player1",delta)
+					if landed:
+						self._landed("player1")
+				elif event_number == 3: # USEREVENT+3 = p1-button-repeat
+					logging.debug("TetrisPlugin: Handling repeating event number: %s" % event_number)
+					speed = self.game_state['button_repeat_speed']
+					pygame.time.set_timer(USEREVENT+3,speed)
+					button = self.game_state["player1"]["repeat_button"]
+					landed = buttons[button]("player1")
+					if landed:
+						self._landed("player1")
+				elif event_number == 4: # USEREVENT+4 = p2-axis-repeat
+					logging.debug("TetrisPlugin: Handling repeating event number: %s" % event_number)
+					speed = self.game_state['button_repeat_speed']
+					pygame.time.set_timer(USEREVENT+4,speed)
+					delta = self.game_state["player2"]["repeat_delta"]
+					landed = self._move("player2",delta)
+					if landed:
+						self._landed("player2")
+				elif event_number == 5: # USEREVENT+5 = p2-button-repeat
+					logging.debug("TetrisPlugin: Handling repeating event number: %s" % event_number)
+					speed = self.game_state['button_repeat_speed']
+					pygame.time.set_timer(USEREVENT+5,speed)
+					button = self.game_state["player2"]["repeat_button"]
+					landed = buttons[button]("player2")
+					if landed:
+						self._landed("player2")
+				else:
+					logging.debug("TetrisPlugin: Tried to handle an unknown USEREVENT")
+			else:
+				logging.debug("TetrisPlugin: Tried to handle an unknown event type")
 		elif self.__state__ == "STOPPED":
 			if pygame.event.event_name(event.type) == "JoyButtonDown":
 				# Handle the start button
@@ -318,7 +389,9 @@ class TetrisPlugin(DDRPiPlugin):
 				'repeat_delta': None,
 				'repeat_button': None
 			},
-			'paused': True
+			'paused': True,
+			'button_repeat_speed': 100,
+			'initial_repeat_delay': 200
 		}
 		self._select_tetromino('player1')
 		self._select_tetromino('player2')

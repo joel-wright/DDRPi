@@ -65,7 +65,7 @@ class FloorSimulator(object):
 			line_read = False
 			
 			# Limit the frame rate
-			clock.tick(50)
+			clock.tick(100)
 			
 	def __build_pixel_list__(self, line):
 		pixels = []
