@@ -11,8 +11,6 @@ from lib.layout import DisplayLayout
 from lib.plugins_base import DDRPiPlugin, PluginRegistry
 from pygame.locals import *
 
-
-
 class DanceSurface(object):
 	"""
 	The class representing the drawable dance floor. This is a wrapper around
@@ -156,7 +154,7 @@ class DDRPi(object):
 		self.__init_controllers__()
 		
 		# Enter debug mode
-		if self.config["system"]["debug"]:
+		if self.config["system"]["debug_logging"]:
 			logger = logging.getLogger()
 			logger.setLevel(logging.DEBUG)
 
