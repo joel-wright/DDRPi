@@ -6,6 +6,7 @@ import logging
 import pygame
 import sys
 import yaml
+import signal
 from lib.comms import FloorComms
 from lib.layout import DisplayLayout
 from lib.utils import ColourUtils
@@ -328,6 +329,12 @@ class DDRPi(object):
 				return False
 				
 		return False
+
+def interrupt_handler(signum, frame):
+	print "Received SIGINT"
+	sys.exit(1)
+    
+signal.signal(signal.SIGINT, interrupt_handler)
 
 # Start the dance floor application
 if __name__ == "__main__":
