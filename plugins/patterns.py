@@ -62,8 +62,8 @@ class ColourFilter(Filter):
 		self.rgb = rgb
 		
 	def process(self, frame):
-		#for each cell, apply the hue adjustment
-		return [[tuple([c1*c2 for c1,c2 in zip(self.rgb, rgb)]) for rgb in row] for row in frame]
+		#for each cell, apply the rgb filter
+		return [[(self.rgb[0] * rgb[0], self.rgb[1] * rgb[1], self.rgb[2] * rgb[2]) for rgb in row] for row in frame]
 		
 		
 class BeatHueAdjustmentFilter(Filter):
