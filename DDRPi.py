@@ -115,9 +115,14 @@ class DanceSurface(object):
 		"""
 		(tlx,tly) = top_left
 		(brx,bry) = bottom_right
-		for y in range(tly,bry):
-			for x in range(tlx,brx):
-				self.draw_tuple_pixel(x, y, colour)
+		if tlx <= brx and tly <= bry:
+			y = tly
+			while y <= bry:
+				x = tlx
+				while x <= brx:
+					self.draw_tuple_pixel(x, y, colour)
+					x += 1
+				y += 1
 		
 	# TODO: More drawing primitives:
 	# def draw_line

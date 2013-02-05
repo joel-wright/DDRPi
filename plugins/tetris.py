@@ -393,7 +393,6 @@ class TetrisPlugin(DDRPiPlugin):
 				'repeat_delta': None,
 				'repeat_button': None
 			},
-			'paused': True,
 			'button_repeat_speed': 100,
 			'initial_repeat_delay': 200
 		}
@@ -666,10 +665,10 @@ class TetrisPlugin(DDRPiPlugin):
 		
 		# Draw black background to game states
 		(p1xtl,p1ytl) = p1tl = self.p1_display_offset
-		p1br = (p1xtl+self.game_width,p1ytl+self.game_height)
+		p1br = (p1xtl+self.game_width-1,p1ytl+self.game_height-1)
 		self.ddrpi_surface.draw_tuple_box(p1tl,p1br,(0,0,0))
 		(p2xtl,p2ytl) = p2tl = self.p2_display_offset
-		p2br = (p2xtl+self.game_width,p2ytl+self.game_height)
+		p2br = (p2xtl+self.game_width-1,p2ytl+self.game_height-1)
 		self.ddrpi_surface.draw_tuple_box(p2tl,p2br,(0,0,0))
 		
 		# Draw the fixed blocks
@@ -701,12 +700,13 @@ class TetrisPlugin(DDRPiPlugin):
 		"""
 		Construct a splash screen suitable to display for a plugin selection menu
 		"""
-		self.ddrpi_surface.clear_tuple((63,0,0))
+		back_colour = self.__other_colours__['fill']
+		self.ddrpi_surface.clear_tuple(back_colour)
 		(p1xtl,p1ytl) = p1tl = self.p1_display_offset
-		p1br = (p1xtl+self.game_width,p1ytl+self.game_height)
+		p1br = (p1xtl+self.game_width-1,p1ytl+self.game_height-1)
 		self.ddrpi_surface.draw_tuple_box(p1tl,p1br,(0,0,0))
 		(p2xtl,p2ytl) = p2tl = self.p2_display_offset
-		p2br = (p2xtl+self.game_width,p2ytl+self.game_height)
+		p2br = (p2xtl+self.game_width-1,p2ytl+self.game_height-1)
 		self.ddrpi_surface.draw_tuple_box(p2tl,p2br,(0,0,0))
 		
 		p1_shape = TetrisPlugin.__tetrominos__['L']('N',3,4)
