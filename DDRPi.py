@@ -365,11 +365,11 @@ class DDRPi(object):
 		return False
 
 def interrupt_handler(signum, frame):
-	print "Received SIGINT"
+	print "Received: %s" % signum
 	sys.exit(1)
-    
-signal.signal(signal.SIGINT, interrupt_handler)
 
+signal.signal(signal.SIGINT, interrupt_handler)
+signal.signal(signal.SIGTERM, interrupt_handler)
 # Start the dance floor application
 if __name__ == "__main__":
 	dance_floor = DDRPi()
