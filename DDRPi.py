@@ -224,6 +224,9 @@ class DDRPi(object):
 		self.temporary_plugin_index = 0
 		self.mode = "MENU"
 		self.active_plugin.display_preview()
+		
+		self.active_plugin = self.__registry__.get_plugin("Patterns")
+		self.mode = "RUNNING"
 		self._main_loop()
 	
 	def _main_loop(self):	
