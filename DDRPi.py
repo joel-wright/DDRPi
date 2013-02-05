@@ -8,6 +8,7 @@ import sys
 import yaml
 from lib.comms import FloorComms
 from lib.layout import DisplayLayout
+from lib.utils import ColourUtils
 from lib.plugins_base import DDRPiPlugin, PluginRegistry
 from pygame.locals import *
 
@@ -40,28 +41,6 @@ class DanceSurface(object):
 		else:
 			from lib.comms import DebugComms
 			self.comms = DebugComms(config["system"]["pipe"])
-		
-	def tupleToHex(self,rgb_tuple):
-		"""
-		Convert an (R, G, B) tuple to hex #RRGGBB
-		"""
-		hex_colour = '#%02x%02x%02x' % rgb_tuple
-		return hex_colour
-
-	def hexToTuple(self,hex_colour):
-		"""
-		Convert hex #RRGGBB to an (R, G, B) tuple
-		"""
-		hex_colour = hex_colour.strip()
-		if hex_colour[0] == '#':
-			hex_colour = hex_colour[1:]
-		if len(hex_colour) != 6:
-			raise ValueError, "input #%s is not in #RRGGBB format" % hex_colour
-		(rs,gs,bs) = hex_colour[:2], hex_colour[2:4], hex_colour[4:]
-		r = int(rs, 16)
-		g = int(gs, 16)
-		b = int(bs, 16)
-		return (r,g,b)
 
 	def blit(self):
 		"""
@@ -74,7 +53,7 @@ class DanceSurface(object):
 		Clear the surface to a single colour
 		"""
 		# Make sure we never send a 1 by mistake and screw up the frames
-		(r,g,b) = [ v if not v == 1 else 0 for v in self.hexToTuple(colour) ]
+		(r,g,b) = [ v if not v == 1 else 0 for v in ColourUtils.hexToTuple(colour) ]
 		for x in range(0,self.total_pixels):
 			self.pixels[x*3:(x+1)*3] = [r,g,b]
 			
@@ -92,7 +71,7 @@ class DanceSurface(object):
 		Set the value of the pixel at (x,y) to colour(#RRGGBB")
 		"""
 		# Make sure we never send a 1 by mistake and screw up the frames
-		(r,g,b) = [ v if not v == 1 else 0 for v in self.hexToTuple(colour) ]
+		(r,g,b) = [ v if not v == 1 else 0 for v in ColourUtils.hexToTuple(colour) ]
 		pos = self.layout.get_position(x,y)
 		if pos is not None:
 			mapped_pixel = 3 * pos
