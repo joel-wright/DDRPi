@@ -27,7 +27,7 @@ class DisplayLayout(object):
 		
 	def get_position(self, x, y):
 		if x >= self.size_x or y >= self.size_y:
-			raise ValueError, "The coordinate (%s,%s) is outside of the layout" % (x,y)
+			return None
 		else:
 			return self.layout_mapping[x][y]
 				
