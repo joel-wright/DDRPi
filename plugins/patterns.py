@@ -4,7 +4,6 @@ import csv
 import time
 import math
 import colorsys
-import sys
 
 from DDRPi import DDRPiPlugin
 from lib.utils import ColourUtils
@@ -19,7 +18,7 @@ class PatternFilter(Filter):
 	def __init__(self, patternFile, beatService):
 		self.frameIndex = 0
 		self.frameTime = 0
-		self.beatService = beatService
+		self.__beatService = beatService
 		
 		with open(patternFile) as csvFile:
 			reader = csv.reader(csvFile)
@@ -44,7 +43,7 @@ class PatternFilter(Filter):
 		tim = time.time()
 		if tim > self.frameTime:
 			# calculate the time of the next frame
-			self.frameTime = self.beatService.getTimeOfNextBeatInterval(self.beatsPerFrame)
+			self.frameTime = self.__beatService.getTimeOfNextBeatInterval(self.beatsPerFrame)
 			
 			toReturn = self.frameIndex
 			#calculate next frame index
@@ -104,14 +103,14 @@ class ColourFilter(Filter):
 class BeatHueAdjustmentFilter(Filter):
 	
 	def __init__(self, beatService, hueAdjustment):
-		self.beatService = beatService
+		self.__beatService = beatService
 		self.hueAdjustment = hueAdjustment
 	
 	def process(self, frame):		
 		# beat position 0 -> 1, adjust to vary from function varies from -1 ->
 		# 0-0.5 -> 0-1
 		# 0.5-1 -> -1-0
-		x = self.beatService.getBeatPosition()
+		x = self.__beatService.getBeatPosition()
 		if x < 0.5:
 			x *= 2
 		else:
@@ -160,13 +159,23 @@ class BeatService(object):
 class Patterns(DDRPiPlugin):
 
 	def configure(self, config, image_surface):
-		self.surface = image_surface
-		self.filters = list()
-		self.beatService = BeatService()
-		self.filters.append(PatternFilter("plugins/nyan.csv", self.beatService))
-		#self.filters.append(MotionBlurFilter(0.9))
-		#self.filters.append(ColourFilter((1.0, 0.0, 1.0)))
-		#self.filters.append(BeatHueAdjustmentFilter(self.beatService, 0.2))
+		self.__surface = image_surface
+		self.__beatService = BeatService()
+		self.__patternIndex = -1
+		self.__nextPatternTime = 0
+		self.__patternDisplaySecs = 30
+		
+		self.__patterns = [
+			[
+				PatternFilter("plugins/nyan.csv", self.__beatService)
+			],
+			[
+				PatternFilter("plugins/line.csv", self.__beatService),
+				MotionBlurFilter(0.9),
+				ColourFilter((1.0, 0.0, 1.0)),
+				BeatHueAdjustmentFilter(self.__beatService, 0.2)
+			]
+		]
 	
 	def display_preview(self):
 		pass
@@ -187,11 +196,23 @@ class Patterns(DDRPiPlugin):
 		pass
 
 	def update_surface(self):
-		frame = reduce(lambda x, y: y.process(x), self.filters, list())
+		frame = self.__apply(self.__getActivePattern())
 		
-		for y in range(0, self.surface.height):
+		for y in range(0, self.__surface.height):
 			row = frame[y]
-			for x in range(0, self.surface.width):
-				self.surface.draw_float_tuple_pixel(x, y, row[x])
+			for x in range(0, self.__surface.width):
+				self.__surface.draw_float_tuple_pixel(x, y, row[x])
 		
-		self.surface.blit()
+		self.__surface.blit()
+		
+	def __apply(self, filters):
+		return reduce(lambda x, y: y.process(x), filters, list())
+	
+	def __getActivePattern(self):
+		tim = time.time()
+		if self.__nextPatternTime < tim:
+			self.__patternIndex = (self.__patternIndex + 1) % len(self.__patterns)
+			self.__nextPatternTime = tim + self.__patternDisplaySecs
+		
+		return self.__patterns[self.__patternIndex]
+		
