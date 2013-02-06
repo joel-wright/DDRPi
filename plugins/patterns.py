@@ -179,6 +179,12 @@ class Patterns(DDRPiPlugin):
 
 	def handle(self, event):
 		pass
+		
+	def pause(self):
+		pass
+		
+	def resume(self):
+		pass
 
 	def update_surface(self):
 		frame = reduce(lambda x, y: y.process(x), self.filters, list())

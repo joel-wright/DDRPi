@@ -246,7 +246,7 @@ class DDRPi(object):
 		# Skip the name of this file (in 0), and iterate over the rest
 		available_plugins = self.__registry__.get_names()
 		for arg in sys.argv[1:]:
-			if (arg in available_plugins):
+			if arg in available_plugins:
 				# Find the plugin
 				this_plugin_index = 0
 				for plugin_name in available_plugins:
