@@ -11,6 +11,7 @@ from lib.comms import FloorComms
 from lib.layout import DisplayLayout
 from lib.utils import ColourUtils
 from lib.plugins_base import DDRPiPlugin, PluginRegistry
+from lib.text import TextWriter
 from pygame.locals import *
 
 class DanceSurface(object):
@@ -32,6 +33,7 @@ class DanceSurface(object):
 		self.total_pixels = self.width * self.height
 		# Initialise all the pixels to black 
 		self.pixels = [ 0 for n in range(0, 3*self.total_pixels) ]
+		self.text_writer = TextWriter()
 		
 	def _init_comms(self, config):
 		"""
@@ -113,6 +115,20 @@ class DanceSurface(object):
 					self.draw_tuple_pixel(x, y, colour)
 					x += 1
 				y += 1
+
+	def draw_text(self, text, colour, x_pos, y_pos):
+		if (self.text_writer == None):
+			return (0,0)
+		# Returns the text size as a (width, height) tuple for reference
+		text_size = self.text_writer.draw_text(self, text, colour, x_pos, y_pos)
+		return text_size
+
+	def get_text_size(self, text):
+		if (self.text_writer == None):
+			return (0,0)
+		# Returns the text size as a (width, height) tuple for reference,
+		#  but doesn't actually draw anything because it doesn't pass a surface through
+		return self.text_writer.draw_text(None, text, (0,0,0), 0, 0)
 		
 	# TODO: More drawing primitives:
 	# def draw_line
