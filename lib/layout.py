@@ -26,7 +26,7 @@ class DisplayLayout(object):
 		return s
 		
 	def get_position(self, x, y):
-		if x >= self.size_x or y >= self.size_y:
+		if x < 0 or y < 0 or x >= self.size_x or y >= self.size_y:
 			return None
 		else:
 			return self.layout_mapping[x][y]
