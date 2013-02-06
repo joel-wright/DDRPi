@@ -1,7 +1,6 @@
 __authors__ = ['Stew Francis']
 
 import csv
-import DDRPi
 import time
 import math
 import colorsys
@@ -160,7 +159,7 @@ class Patterns(DDRPiPlugin):
 		self.surface = image_surface
 		self.filters = list()
 		self.beatService = BeatService()
-		self.filters.append(PatternFilter("line.csv", self.beatService))
+		self.filters.append(PatternFilter("plugins/line.csv", self.beatService))
 		self.filters.append(MotionBlurFilter(0.9))
 		self.filters.append(ColourFilter((1.0, 0.0, 1.0)))
 		self.filters.append(BeatHueAdjustmentFilter(self.beatService, 0.2))
