@@ -205,7 +205,6 @@ class TetrisPlugin(DDRPiPlugin):
 				}
 			}
 			# Update the boards according to the event
-			# No repeating events; you wanna move twice, push it twice
 			if pygame.event.event_name(event.type) == "JoyButtonDown":
 				# Handle the button
 				joypad = event.joy
