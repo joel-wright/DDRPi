@@ -57,6 +57,37 @@ def hexToFloatTuple(hexString):
 	(r, g, b) = ColourUtils.hexToTuple(hexString)
 	return (r/float(255), float(g/255), float(b/255))
 
+class MotionBlurFilter(Filter):
+	
+	def __init__(self, decayFactor):
+		self.__decayFactor = decayFactor;
+		self.__previous = None
+		
+	def process(self, frame):
+		self.__previous = self.__decay(self.__previous)
+		self.__previous = self.__overlay(frame, self.__previous)
+		return self.__previous
+	
+	def __decay(self, frame):
+		if self.__previous == None: return None
+		return [[MotionBlurFilter.__applyDecay(self.__decayFactor, rgb) for rgb in row] for row in frame]
+	
+	def __overlay(self, topFrame, bottomFrame):
+		if bottomFrame == None: return topFrame
+		frameOfPairedRows = zip(topFrame, bottomFrame)
+		return [[self.__blend(pair[0], pair[1]) for pair in zip(rowPairs[0], rowPairs[1])] for rowPairs in frameOfPairedRows]
+
+	@staticmethod
+	def __blend(rgb1, rgb2):
+		return (max(rgb1[0], rgb2[0]), max(rgb1[1], rgb2[1]), max(rgb1[2], rgb2[2]))
+	
+	@staticmethod
+	def __applyDecay(decayFactor, rgb):
+		(r, g, b) = rgb
+		(h, l, s) = colorsys.rgb_to_hls(r, g, b);
+		l *= decayFactor
+		return colorsys.hls_to_rgb(h, l, s)
+
 class ColourFilter(Filter):
 	
 	def __init__(self, rgb):
@@ -130,6 +161,7 @@ class Patterns(DDRPiPlugin):
 		self.filters = list()
 		self.beatService = BeatService()
 		self.filters.append(PatternFilter("line.csv", self.beatService))
+		self.filters.append(MotionBlurFilter(0.9))
 		self.filters.append(ColourFilter((1.0, 0.0, 1.0)))
 		self.filters.append(BeatHueAdjustmentFilter(self.beatService, 0.2))
 	
