@@ -6,6 +6,7 @@ import pygame
 import sys
 import time
 import yaml
+import signal
 
 lib_path = os.path.abspath('../lib')
 sys.path.append(lib_path)
@@ -104,7 +105,12 @@ class FloorSimulator(object):
 				if p is not None:
 					pixel_coords[p] = (x,y)
 		return pixel_coords
-			
+
+def interrupt_handler(signum, frame):
+	print "Received SIGINT"
+	sys.exit(1)
+    
+signal.signal(signal.SIGINT, interrupt_handler)
 
 # Start the floor simulator
 if __name__ == "__main__":

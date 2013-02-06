@@ -6,6 +6,7 @@ import logging
 import pygame
 import sys
 import yaml
+import signal
 from lib.comms import FloorComms
 from lib.layout import DisplayLayout
 from lib.utils import ColourUtils
@@ -87,6 +88,16 @@ class DanceSurface(object):
 		if pos is not None:
 			mapped_pixel = 3 * pos
 			self.pixels[mapped_pixel:mapped_pixel+3] = [r,g,b]
+			
+	def draw_float_tuple_pixel(self, x, y, colour):
+		"""
+		Set the value of the pixel at (x,y) to colour((r,g,b)) where r g and b are floats
+		"""
+		(floatR, floatG, floatB) = colour
+		intR = int(floatR*255)
+		intG = int(floatG*255)
+		intB = int(floatB*255)
+		self.draw_tuple_pixel(x, y, (intR, intG, intB))
 			
 	def draw_tuple_box(self, top_left, bottom_right, colour):
 		"""
@@ -329,6 +340,12 @@ class DDRPi(object):
 				
 		return False
 
+def interrupt_handler(signum, frame):
+	print "Received: %s" % signum
+	sys.exit(1)
+
+signal.signal(signal.SIGINT, interrupt_handler)
+signal.signal(signal.SIGTERM, interrupt_handler)
 # Start the dance floor application
 if __name__ == "__main__":
 	dance_floor = DDRPi()
