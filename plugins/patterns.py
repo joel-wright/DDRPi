@@ -4,6 +4,7 @@ import csv
 import time
 import math
 import colorsys
+import sys
 
 from DDRPi import DDRPiPlugin
 from lib.utils import ColourUtils
@@ -54,7 +55,10 @@ class PatternFilter(Filter):
 
 def hexToFloatTuple(hexString):
 	(r, g, b) = ColourUtils.hexToTuple(hexString)
-	return (r/float(255), float(g/255), float(b/255))
+	rf = r/float(255)
+	gf = g/float(255)
+	bf = b/float(255);
+	return (rf, gf, bf)
 
 class MotionBlurFilter(Filter):
 	
@@ -159,10 +163,10 @@ class Patterns(DDRPiPlugin):
 		self.surface = image_surface
 		self.filters = list()
 		self.beatService = BeatService()
-		self.filters.append(PatternFilter("plugins/line.csv", self.beatService))
-		self.filters.append(MotionBlurFilter(0.9))
-		self.filters.append(ColourFilter((1.0, 0.0, 1.0)))
-		self.filters.append(BeatHueAdjustmentFilter(self.beatService, 0.2))
+		self.filters.append(PatternFilter("plugins/nyan.csv", self.beatService))
+		#self.filters.append(MotionBlurFilter(0.9))
+		#self.filters.append(ColourFilter((1.0, 0.0, 1.0)))
+		#self.filters.append(BeatHueAdjustmentFilter(self.beatService, 0.2))
 	
 	def display_preview(self):
 		pass
