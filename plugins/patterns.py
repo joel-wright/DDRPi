@@ -7,6 +7,7 @@ import math
 import colorsys
 
 from DDRPi import DDRPiPlugin
+from lib.utils import ColourUtils
 
 class Filter(object):
 	
@@ -53,7 +54,7 @@ class PatternFilter(Filter):
 			return self.frameIndex
 
 def hexToFloatTuple(hexString):
-	(r, g, b) = DDRPi.hexToTuple(hexString)
+	(r, g, b) = ColourUtils.hexToTuple(hexString)
 	return (r/float(255), float(g/255), float(b/255))
 
 class ColourFilter(Filter):
@@ -128,7 +129,7 @@ class Patterns(DDRPiPlugin):
 		self.surface = image_surface
 		self.filters = list()
 		self.beatService = BeatService()
-		self.filters.append(PatternFilter("frames.csv", self.beatService))
+		self.filters.append(PatternFilter("line.csv", self.beatService))
 		self.filters.append(ColourFilter((1.0, 0.0, 1.0)))
 		self.filters.append(BeatHueAdjustmentFilter(self.beatService, 0.2))
 	
@@ -147,9 +148,9 @@ class Patterns(DDRPiPlugin):
 	def update_surface(self):
 		frame = reduce(lambda x, y: y.process(x), self.filters, list())
 		
-		for x in range(0, self.surface.width):
-			row = frame[x]
-			for y in range(0, self.surface.height):
-				self.surface.draw_float_tuple_pixel(x, y, row[y])
+		for y in range(0, self.surface.height):
+			row = frame[y]
+			for x in range(0, self.surface.width):
+				self.surface.draw_float_tuple_pixel(x, y, row[x])
 		
 		self.surface.blit()
