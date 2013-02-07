@@ -242,21 +242,22 @@ class DDRPi(object):
 			# Configure a default plugin
 			# If there is a plugin specified on the command line
 			if (self.get_requested_initial_plugin() == None):
-				print "Starting with random initial plugin"
+				print "Menu mode"
 				self.plugin_index = 0
+				self.temporary_plugin_index = 0
+				self.mode = "MENU"
 				self.active_plugin = self.__registry__.get_plugin(available_plugins[0])
-				self.active_plugin.configure(self.config, self.dance_surface)
-				self.active_plugin.start()
-
+				self.active_plugin.display_preview()
+			else :
+				# Start the active plugin
+				self.temporary_plugin_index = 0
+				self.mode = "RUNNING"
+			self._main_loop()
 		else:
 			logging.error("No display plugins found")
 			sys.exit(1)
 
-		# Start the application in Menu mode
-		self.temporary_plugin_index = 0
-		self.mode = "RUNNING"
-#        self.active_plugin.display_preview()
-		self._main_loop()
+		
 	
 	def get_requested_initial_plugin(self):
 		# Skip the name of this file (in 0), and iterate over the rest

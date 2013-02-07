@@ -12,14 +12,9 @@ class Filter(object):
 	
 	def process(self, frame):
 		raise NotImplementedError
-	
-class PatternFilter(Filter):
-	
-	def __init__(self, patternFile, beatService):
-		self.frameIndex = 0
-		self.frameTime = 0
-		self.__beatService = beatService
-		
+
+class Pattern(object):
+	def __init__(self, patternFile):
 		with open(patternFile) as csvFile:
 			reader = csv.reader(csvFile)
 			patternMeta = reader.next()
@@ -35,19 +30,27 @@ class PatternFilter(Filter):
 		self.frames = [rows[i * height : (i+1) * height] for i in range(0, len(rows) / height)]
 		self.beatsPerFrame = 1 / float(framesPerBeat)
 	
+class PatternFilter(Filter):
+	
+	def __init__(self, patternFile, beatService):
+		self.frameIndex = 0
+		self.frameTime = 0
+		self.__beatService = beatService
+		self.pattern = Pattern(patternFile)
+	
 	def process(self, frame):
-		return self.frames[self.__getFrameIndex()]
+		return self.pattern.frames[self.__getFrameIndex()]
 		
 	def __getFrameIndex(self):
 		#calculate whether or not we need to advance the frame index
 		tim = time.time()
 		if tim > self.frameTime:
 			# calculate the time of the next frame
-			self.frameTime = self.__beatService.getTimeOfNextBeatInterval(self.beatsPerFrame)
+			self.frameTime = self.__beatService.getTimeOfNextBeatInterval(self.pattern.beatsPerFrame)
 			
 			toReturn = self.frameIndex
 			#calculate next frame index
-			self.frameIndex = (self.frameIndex + 1) % len(self.frames)
+			self.frameIndex = (self.frameIndex + 1) % len(self.pattern.frames)
 			return toReturn
 		else:
 			return self.frameIndex
@@ -178,7 +181,7 @@ class Patterns(DDRPiPlugin):
 		]
 	
 	def display_preview(self):
-		pass
+		self.__blitFrame(Pattern("plugins/triForce.csv").frames[0])
 
 	def start(self):
 		pass
@@ -197,7 +200,9 @@ class Patterns(DDRPiPlugin):
 
 	def update_surface(self):
 		frame = self.__apply(self.__getActivePattern())
-		
+		self.__blitFrame(frame)
+	
+	def __blitFrame(self, frame):
 		for y in range(0, self.__surface.height):
 			row = frame[y]
 			for x in range(0, self.__surface.width):
