@@ -198,7 +198,7 @@ class DDRPi(object):
 
 			for plugin in DDRPiPlugin.__subclasses__():
 				name = plugin.__name__
-				print("name: %s" % name)
+				logging.debug("DDRPi: plugin name: %s" % name)
 				pinst = plugin()
 				pinst.configure(self.config, self.dance_surface)
 				self.__registry__.register(name, pinst)
@@ -242,7 +242,7 @@ class DDRPi(object):
 			# Configure a default plugin
 			# If there is a plugin specified on the command line
 			if (self.get_requested_initial_plugin() == None):
-				print "Starting with random initial plugin"
+				logging.info("Starting with random initial plugin")
 				self.plugin_index = 0
 				self.active_plugin = self.__registry__.get_plugin(available_plugins[0])
 				self.active_plugin.configure(self.config, self.dance_surface)
@@ -269,11 +269,11 @@ class DDRPi(object):
 					if (plugin_name == arg):
 						self.active_plugin = self.__registry__.get_plugin(plugin_name)
 						self.plugin_index = this_plugin_index
-						print "Found command line requested plugin %s at index %d" % (arg, this_plugin_index)
+						logging.info("Found command line requested plugin %s at index %d" % (arg, this_plugin_index))
 						return plugin_name
 
 		if (len(sys.argv[1:]) > 0):
-			print "Unable to load any requested plugins"
+			logging.error("Unable to load any requested plugins")
 		return None
 
 	def _main_loop(self):	
@@ -381,7 +381,7 @@ class DDRPi(object):
 		return False
 
 def interrupt_handler(signum, frame):
-	print "Received: %s" % signum
+	logging.info("Received: %s" % signum)
 	sys.exit(1)
 
 signal.signal(signal.SIGINT, interrupt_handler)
