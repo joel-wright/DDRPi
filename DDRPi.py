@@ -250,6 +250,7 @@ class DDRPi(object):
 				self.active_plugin.display_preview()
 			else :
 				# Start the active plugin
+				self.active_plugin.start()
 				self.temporary_plugin_index = 0
 				self.mode = "RUNNING"
 			self._main_loop()
