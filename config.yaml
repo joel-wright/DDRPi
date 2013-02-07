@@ -1,10 +1,13 @@
 # Main option config
 system:
   plugin_dir: plugins
+  floor: False
   tty: /dev/ttyUSB0
+  ## You should disable debug for deployment because
+  ## if the simulator crashes it'll take down everything
   debug: True
-  debug_logging: False
   pipe: /tmp/dance_pipe
+  debug_logging: False
 
 # Module layout config (we may change this later)
 modules:

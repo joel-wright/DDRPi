@@ -7,7 +7,7 @@ import pygame
 import sys
 import yaml
 import signal
-from lib.comms import FloorComms
+from lib.comms import ComboComms
 from lib.layout import DisplayLayout
 from lib.utils import ColourUtils
 from lib.plugins_base import DDRPiPlugin, PluginRegistry
@@ -39,11 +39,7 @@ class DanceSurface(object):
 		"""
 		Initialise the comms to the floor or simulator
 		"""
-		if config["system"]["debug"] == False:
-			self.comms = FloorComms(config["system"]["tty"])
-		else:
-			from lib.comms import DebugComms
-			self.comms = DebugComms(config["system"]["pipe"])
+		self.comms = ComboComms(config)
 
 	def blit(self):
 		"""

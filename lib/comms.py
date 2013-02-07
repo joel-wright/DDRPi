@@ -4,6 +4,29 @@ import serial
 import threading
 import os
 
+class ComboComms(object):
+	def __init__(self, config):
+		self.comms = []
+		if config["system"]["debug"] == True:
+			debug_comms = DebugComms(config["system"]["pipe"])
+			self.comms.append(debug_comms)
+			
+		if config["system"]["floor"] == True:
+			floor_comms = FloorComms(config["system"]["tty"])
+			self.comms.append(floor_comms)
+
+	def configure(self, tty=None, baud=None, timeout=None):
+		for c in self.comms:
+			c.configure(tty, baud, timeout)
+			
+	def send_data(self,data_buffer):
+		for c in self.comms:
+			c.send_data(data_buffer)
+
+	def clear(self):  
+		for c in self.comms:
+			c.clear()
+
 class FloorComms(object):
 	def __init__(self, tty):
 		self.tty = tty
@@ -11,7 +34,7 @@ class FloorComms(object):
 		self.timeout = 1
 		self.s_port = serial.Serial(self.tty, self.baud, timeout=self.timeout)
 		
-	def configure(self, tty=None, baud=None, timeout=None, pixels=None):
+	def configure(self, tty=None, baud=None, timeout=None):
 		changes = False
 		if tty is not None:
 			self.tty = tty
@@ -22,7 +45,6 @@ class FloorComms(object):
 		if timeout is not None:
 			self.timeout = timeout
 			changes = True
-			
 		if changes:
 			self.ser = serial.Serial(self.tty, self.baud, timeout=self.timeout)
 
@@ -40,17 +62,11 @@ class FloorComms(object):
 		s += chr(1)
 		self.s_port.write(s)
 
-	def get_blank_buffer(self):
-		blank_buffer = []
-		for i in range(self.pixels*3):
-			blank_buffer.append(0)
-		return blank_buffer
-
 class DebugComms(object):
 	def __init__(self, pipe):
 		self.pipe = open(pipe,'w')
 		
-	def configure(self, tty=None, baud=None, timeout=None, pixels=None):
+	def configure(self, tty=None, baud=None, timeout=None):
 		return None
 
 	def send_data(self,data_buffer):
@@ -69,10 +85,4 @@ class DebugComms(object):
 		for i in range(self.pixels*3):
 			s += "\\x00"
 		self.pipe.write(s)
-
-	def get_blank_buffer(self):
-		blank_buffer = []
-		for i in range(self.pixels*3):
-			blank_buffer.append(0)
-		return blank_buffer
 
