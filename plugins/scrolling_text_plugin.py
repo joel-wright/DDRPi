@@ -1,4 +1,4 @@
-__authors__ = ['Joel Wright']
+__authors__ = ['Andrew Taylor']
 
 import random
 import time
