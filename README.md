@@ -5,11 +5,34 @@ DDRPi Controller Software.
 
 The code lives! We can now switch between plugins, and play a game of Tetris :)
 
-Main controls:
+Main system controls:
 
-        Select - Enter Menu Mode
+        Select - Enter/Exit Menu Mode
         Start  - Start running the currently selected plugin
         LB/RB  - Switch between plugins in menu mode
+
+Tetris Controls
+---------------
+
+The obvious direction controls are as you'd expect (we ignore up of course). The
+other buttons are as follows:
+
+        Start - Pause/Resume (also start a new game when on has ended)
+        A/B   - Rotate right/left
+        Y     - Drop the current piece
+        X     - Start a new game when paused
+
+Pong Controls
+-------------
+
+The position of the bats are controlled using either axis as follows:
+
+        Up/Down    - Up and down obviously
+        Left/Right - Dependends on the player (player2's controls are inverted
+                     so that the game can be played form either end of the floor
+                     with the two players facing each other)
+        Start      - Pause/Resume and start a new game if one has ended
+        X          - Start a new game when paused
 
 Running a simple test
 ---------------------
@@ -37,15 +60,5 @@ You should now see the inintial menu screen. A preview of each plugin is shown
 by pressing the buffer buttons. When you see the plugin you want, press start
 and the plugin will start running.
 
-Tetris Controls
----------------
-
-The obvious direction controls are as you'd expect (we ignore up of course). The
-other buttons are as follows:
-
-        Start - Pause/Resume (also start a new game when on has ended)
-        A/B   - Rotate right/left
-        Y     - Drop the current piece
-        X     - Start a new game when paused
 
 
