@@ -32,28 +32,30 @@ class Pattern(object):
 	
 class PatternFilter(Filter):
 	
-	def __init__(self, patternFile, beatService):
-		self.frameIndex = 0
+	def __init__(self, patternFile, beatService, filters = []):
+		self.__frameIndex = 0
 		self.frameTime = 0
 		self.__beatService = beatService
-		self.pattern = Pattern(patternFile)
+		self.__pattern = Pattern(patternFile)
+		self.__filters = filters
+		self.__currentFrame = None
 	
 	def process(self, frame):
-		return self.pattern.frames[self.__getFrameIndex()]
-		
-	def __getFrameIndex(self):
+		if self.__requiresNewFrame():
+			self.__frameIndex = (self.__frameIndex + 1) % len(self.__pattern.frames)
+			self.__currentFrame = Patterns.apply(self.__filters, self.__pattern.frames[self.__frameIndex])
+
+		return self.__currentFrame
+	
+	def __requiresNewFrame(self):
 		#calculate whether or not we need to advance the frame index
 		tim = time.time()
 		if tim > self.frameTime:
 			# calculate the time of the next frame
-			self.frameTime = self.__beatService.getTimeOfNextBeatInterval(self.pattern.beatsPerFrame)
-			
-			toReturn = self.frameIndex
-			#calculate next frame index
-			self.frameIndex = (self.frameIndex + 1) % len(self.pattern.frames)
-			return toReturn
+			self.frameTime = self.__beatService.getTimeOfNextBeatInterval(self.__pattern.beatsPerFrame)
+			return True
 		else:
-			return self.frameIndex
+			return False
 
 def hexToFloatTuple(hexString):
 	(r, g, b) = ColourUtils.hexToTuple(hexString)
@@ -66,15 +68,15 @@ class MotionBlurFilter(Filter):
 	
 	def __init__(self, decayFactor):
 		self.__decayFactor = decayFactor;
-		self.__previous = None
+		self.__currentFrame = None
 		
 	def process(self, frame):
-		self.__previous = self.__decay(self.__previous)
-		self.__previous = self.__overlay(frame, self.__previous)
-		return self.__previous
+		self.__currentFrame = self.__decay(self.__currentFrame)
+		self.__currentFrame = self.__overlay(frame, self.__currentFrame)
+		return self.__currentFrame
 	
 	def __decay(self, frame):
-		if self.__previous == None: return None
+		if self.__currentFrame == None: return None
 		return [[MotionBlurFilter.__applyDecay(self.__decayFactor, rgb) for rgb in row] for row in frame]
 	
 	def __overlay(self, topFrame, bottomFrame):
@@ -166,15 +168,17 @@ class Patterns(DDRPiPlugin):
 		self.__beatService = BeatService()
 		self.__patternIndex = -1
 		self.__nextPatternTime = 0
-		self.__patternDisplaySecs = 30
+		self.__patternDisplaySecs = 10
 		
 		self.__patterns = [
 			[
 				PatternFilter("plugins/nyan.csv", self.__beatService)
 			],
 			[
-				PatternFilter("plugins/line.csv", self.__beatService),
-				MotionBlurFilter(0.9),
+				PatternFilter("plugins/line.csv", self.__beatService,
+					[
+						MotionBlurFilter(0.9)
+					]),
 				ColourFilter((1.0, 0.0, 1.0)),
 				BeatHueAdjustmentFilter(self.__beatService, 0.2)
 			]
@@ -199,7 +203,7 @@ class Patterns(DDRPiPlugin):
 		pass
 
 	def update_surface(self):
-		frame = self.__apply(self.__getActivePattern())
+		frame = Patterns.apply(self.__getActivePattern(), list())
 		self.__blitFrame(frame)
 	
 	def __blitFrame(self, frame):
@@ -209,9 +213,10 @@ class Patterns(DDRPiPlugin):
 				self.__surface.draw_float_tuple_pixel(x, y, row[x])
 		
 		self.__surface.blit()
-		
-	def __apply(self, filters):
-		return reduce(lambda x, y: y.process(x), filters, list())
+	
+	@staticmethod
+	def apply(filters, zero):
+		return reduce(lambda x, y: y.process(x), filters, zero)
 	
 	def __getActivePattern(self):
 		tim = time.time()
