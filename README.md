@@ -60,5 +60,8 @@ You should now see the inintial menu screen. A preview of each plugin is shown
 by pressing the buffer buttons. When you see the plugin you want, press start
 and the plugin will start running.
 
+Debugging
+---------
 
-
+Debug logging can be configured in the config.yaml file, and a specific plugin
+can be loaded at startup by specifying its class name at the command line.
