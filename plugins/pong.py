@@ -139,7 +139,11 @@ class PongPlugin(DDRPiPlugin):
 					else:
 						repeat_speed = self.game_state['initial_repeat_delay']
 						pygame.time.set_timer(USEREVENT+joypad,repeat_speed)
-						self.game_state[player]['direction'] = direction
+						if player == 'player2' and event.axis == 0:
+							# Invert left/right for player 2 for face2face gaming :)
+							self.game_state[player]['direction'] = -direction
+						else:
+							self.game_state[player]['direction'] = direction
 						self._move_bat(player,self.game_state[player]['direction'])
 			elif pygame.event.event_name(event.type) == "UserEvent":
 				event_number = event.type - 24
