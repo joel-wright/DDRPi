@@ -94,6 +94,17 @@ class MotionBlurFilter(Filter):
 		(h, l, s) = colorsys.rgb_to_hls(r, g, b);
 		l *= decayFactor
 		return colorsys.hls_to_rgb(h, l, s)
+	
+class HueScroller(Filter):
+	
+	def __init__(self):
+		self.__lastAdjustment = 0.0
+		
+			
+	def process(self, frame):
+		self.__lastAdjustment = (self.__lastAdjustment + 0.01) % 1 + 1 % 1
+		return [[BeatHueAdjustmentFilter.adjustHue(self.__lastAdjustment, rgb) for rgb in row] for row in frame]
+		
 
 class ColourFilter(Filter):
 	
@@ -103,7 +114,32 @@ class ColourFilter(Filter):
 	def process(self, frame):
 		#for each cell, apply the rgb filter
 		return [[(self.rgb[0] * rgb[0], self.rgb[1] * rgb[1], self.rgb[2] * rgb[2]) for rgb in row] for row in frame]
+	
+class BeatLightnessAdjustment(Filter):
+	
+	def __init__(self, beatService):
+		self.__beatService = beatService
+		self.__lightnessAdjustment = 0.1
 		
+	def process(self, frame):
+		x = self.__beatService.getBeatPosition()
+		if x < 0.5:
+			x *= 2
+		else:
+			x = 2 * (x - 1)
+		
+		#calculate how much we need to add to the hue, based on beat position
+		frameAdjustment = self.__lightnessAdjustment / (math.e ** ((5*x) ** 2))
+		#for each cell, apply the hue adjustment
+		return [[BeatLightnessAdjustment.adjustLightness(frameAdjustment, rgb) for rgb in row] for row in frame]
+	
+	@staticmethod
+	def adjustLightness(adjustment, rgb):
+		(r, g, b) = rgb
+		(h, l, s) = colorsys.rgb_to_hls(r, g, b);
+		# inc and wrap h
+		l = ((l + adjustment) % 1 + 1 % 1)
+		return colorsys.hls_to_rgb(h, l, s)
 		
 class BeatHueAdjustmentFilter(Filter):
 	
@@ -125,9 +161,10 @@ class BeatHueAdjustmentFilter(Filter):
 		frameHueAdjustment = self.hueAdjustment / (math.e ** ((5*x) ** 2))
 		
 		#for each cell, apply the hue adjustment
-		return [[self.__adjustHue(frameHueAdjustment, rgb) for rgb in row] for row in frame]
+		return [[BeatHueAdjustmentFilter.adjustHue(frameHueAdjustment, rgb) for rgb in row] for row in frame]
 	
-	def __adjustHue(self, adjustment, rgb):
+	@staticmethod
+	def adjustHue(adjustment, rgb):
 		(r, g, b) = rgb
 		(h, l, s) = colorsys.rgb_to_hls(r, g, b);
 		# inc and wrap h
@@ -168,19 +205,81 @@ class Patterns(DDRPiPlugin):
 		self.__beatService = BeatService()
 		self.__patternIndex = -1
 		self.__nextPatternTime = 0
-		self.__patternDisplaySecs = 10
+		self.__patternDisplaySecs = 30
 		
 		self.__patterns = [
 			[
 				PatternFilter("plugins/nyan.csv", self.__beatService)
 			],
 			[
-				PatternFilter("plugins/line.csv", self.__beatService,
+				PatternFilter("plugins/knightRider.csv", self.__beatService,
 					[
 						MotionBlurFilter(0.9)
 					]),
 				ColourFilter((1.0, 0.0, 1.0)),
 				BeatHueAdjustmentFilter(self.__beatService, 0.2)
+			],
+			[
+				PatternFilter("plugins/knightRider.csv", self.__beatService,
+					[
+						MotionBlurFilter(0.9)
+					]),
+				ColourFilter((1.0, 0.0, 0.0)),
+				HueScroller()
+			],
+			[
+				PatternFilter("plugins/knightRider.csv", self.__beatService,
+					[
+						MotionBlurFilter(0.9)
+					]),
+				ColourFilter((1.0, 0.0, 0.0)),
+				BeatLightnessAdjustment(self.__beatService), #would like to apply this to the raw pattern before motion blur, but not pattern-specific
+				HueScroller(),
+			],
+			[
+				PatternFilter("plugins/matrix.csv", self.__beatService,
+				[
+					MotionBlurFilter(0.95)
+				]),
+				ColourFilter((0.0, 1.0, 0.0)),
+				HueScroller()
+			],
+			[
+				PatternFilter("plugins/explode.csv", self.__beatService,
+				[
+					MotionBlurFilter(0.9)
+				]),
+				ColourFilter((1.0, 0.0, 1.0)),
+				BeatHueAdjustmentFilter(self.__beatService, 0.2)
+			],
+			[
+				PatternFilter("plugins/explode2.csv", self.__beatService,
+				[
+					MotionBlurFilter(0.9)
+				]),
+				ColourFilter((0.0, 0.0, 1.0)),
+				HueScroller()
+			],
+			[
+				PatternFilter("plugins/explodeA.csv", self.__beatService,
+				[
+					MotionBlurFilter(0.9)
+				]),
+				ColourFilter((0.0, 0.0, 1.0)),
+				HueScroller()
+			],
+			[
+				PatternFilter("plugins/waveyWave.csv", self.__beatService),
+				ColourFilter((0.0, 0.0, 1.0)),
+				BeatHueAdjustmentFilter(self.__beatService, 0.2)
+			],
+			[
+				PatternFilter("plugins/diamond.csv", self.__beatService, 
+					[
+						MotionBlurFilter(0.7)
+					]),
+				ColourFilter((1.0, 0.5, 0.5)),
+				HueScroller()
 			]
 		]
 	
