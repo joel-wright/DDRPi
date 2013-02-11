@@ -45,6 +45,20 @@ class DanceSurface(object):
 		"""
 		Draw the updated floor to the serial port
 		"""
+		i = 0
+		sanitised_pixels = []
+		while i < len(self.pixels):
+			p = self.pixels[i]
+			if p < 0:
+				logging.error("DanceSurface: Tried to send a pixel component with a negative value")
+				sanitised_pixels.append(0)
+			elif p > 255:
+				logging.error("DanceSurface: Tried to send a pixel component with a value > 255")
+				sanitised_pixels.append(255)
+			else:
+				sanitised_pixels.append(p)
+			i += 1
+		self.pixels = santised_pixels
 		self.comms.send_data(self.pixels)
 
 	def clear_hex(self, colour):
