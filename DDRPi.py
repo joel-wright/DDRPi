@@ -58,7 +58,7 @@ class DanceSurface(object):
 			else:
 				sanitised_pixels.append(p)
 			i += 1
-		self.pixels = santised_pixels
+		self.pixels = sanitised_pixels
 		self.comms.send_data(self.pixels)
 
 	def clear_hex(self, colour):
