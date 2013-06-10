@@ -101,6 +101,13 @@ class DanceSurface(object):
 			mapped_pixel = 3 * pos
 			self.pixels[mapped_pixel:mapped_pixel+3] = [r,g,b]
 			
+	def get_tuple_pixel(self, x, y):
+		pos = self.layout.get_position(x, y)
+		if pos is None:
+			return None
+		mapped_pixel = 3 * pos
+		return self.pixels[mapped_pixel:mapped_pixel+3]
+			
 	def draw_float_tuple_pixel(self, x, y, colour):
 		"""
 		Set the value of the pixel at (x,y) to colour((r,g,b)) where r g and b are floats
